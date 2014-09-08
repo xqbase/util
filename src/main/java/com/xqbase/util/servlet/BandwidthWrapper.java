@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -22,21 +23,6 @@ class BandwidthOutputStream extends ServletOutputStream {
 		this.out = out;
 		this.lock = lock;
 		this.block = block;
-	}
-
-	@Override
-	public void flush() throws IOException {
-		out.flush();
-	}
-
-	@Override
-	public void close() throws IOException {
-		out.close();
-	}
-
-	@Override
-	public void write(int b) throws IOException {
-		out.write(b);
 	}
 
 	@Override
@@ -64,6 +50,31 @@ class BandwidthOutputStream extends ServletOutputStream {
 		if (remaining > 0) {
 			out.write(b, written, remaining);
 		}
+	}
+
+	@Override
+	public void write(int b) throws IOException {
+		out.write(b);
+	}
+
+	@Override
+	public void flush() throws IOException {
+		out.flush();
+	}
+
+	@Override
+	public void close() throws IOException {
+		out.close();
+	}
+
+	@Override
+	public boolean isReady() {
+		return out.isReady();
+	}
+
+	@Override
+	public void setWriteListener(WriteListener listener) {
+		out.setWriteListener(listener);
 	}
 }
 
