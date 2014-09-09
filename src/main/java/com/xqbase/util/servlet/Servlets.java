@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class Servlets {
-	static ThreadLocal<Servlets> local = new ThreadLocal<Servlets>();
+	static ThreadLocal<Servlets> local = new ThreadLocal<>();
 
 	ServletContext context;
 	HttpServletRequest request;

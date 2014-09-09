@@ -55,7 +55,7 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 			activeCount.incrementAndGet();
 			return entry;
 		}
-		entry = new Entry<T>();
+		entry = new Entry<>();
 		entry.obj = makeObject();
 		entry.created = entry.borrowed = now;
 		entry.borrows = 0;
