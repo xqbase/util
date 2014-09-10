@@ -23,13 +23,9 @@ public class ShutdownHook implements SignalHandler {
 			return true;
 		}
 		mainThread.set(Thread.currentThread());
-		String command = System.getProperty("sun.java.command");
-		if (command != null && !command.isEmpty()) {
-			if (new Throwable().getStackTrace()[1].getClassName().
-					equals(command.split(" ")[0])) {
-				Signal.handle(new Signal("INT"), this);
-				Signal.handle(new Signal("TERM"), this);
-			}
+		if (new Throwable().getStackTrace().length == 2) {
+			Signal.handle(new Signal("INT"), this);
+			Signal.handle(new Signal("TERM"), this);
 		}
 		return false;
 	}

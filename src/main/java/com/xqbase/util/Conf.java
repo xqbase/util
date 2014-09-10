@@ -28,16 +28,6 @@ public class Conf {
 
 	private static String confDir = null, logDir = null;
 
-	private static void load(Properties p, String path) {
-		try (FileInputStream in = new FileInputStream(path)) {
-			p.load(in);
-		} catch (FileNotFoundException e) {
-			// Ignored
-		} catch (IOException e) {
-			Log.w(e.getMessage());
-		}
-	}
-
 	static {
 		for (String argument : ManagementFactory.
 				getRuntimeMXBean().getInputArguments()) {
@@ -52,10 +42,40 @@ public class Conf {
 		logDir = p.getProperty("log_dir");
 	}
 
+	private static void load(Properties p, String path) {
+		try (FileInputStream in = new FileInputStream(path)) {
+			p.load(in);
+		} catch (FileNotFoundException e) {
+			// Ignored
+		} catch (IOException e) {
+			Log.w(e.getMessage());
+		}
+	}
+
+	private static String getConfPath(String name, String confDir_) {
+		return confDir_ == null ? locate("conf/" +
+				name + ".properties") : confDir_ + name + ".properties";
+	}
+
+	private static Class<?> getParentClass() {
+		for (StackTraceElement ste : new Throwable().getStackTrace()) {
+			String className = ste.getClassName();
+			if (!className.equals(Conf.class.getName())) {
+				try {
+					return Class.forName(className);
+				} catch (ReflectiveOperationException e) {
+					Log.e(e);
+					return Conf.class;
+				}
+			}
+		}
+		return Conf.class;
+	}
+
 	public static String locate(String path) {
-		String classFile = new Throwable().getStackTrace()[1].
-				getClassName().replace('.', '/') + ".class";
-		URL url = Conf.class.getResource("/" + classFile);
+		Class<?> parentClass = getParentClass();
+		String classFile = parentClass.getName().replace('.', '/') + ".class";
+		URL url = parentClass.getResource("/" + classFile);
 		if (url == null) {
 			return path;
 		}
@@ -109,14 +129,9 @@ public class Conf {
 		}
 	}
 
-	private static String getConfPath(String name, String confDir_) {
-		return confDir_ == null ? locate("conf/" +
-				name + ".properties") : confDir_ + name + ".properties";
-	}
-
 	public static Properties load(String name) {
 		Properties p = new Properties();
-		InputStream in = Conf.class.getResourceAsStream("/" + name + ".properties");
+		InputStream in = getParentClass().getResourceAsStream("/" + name + ".properties");
 		if (in != null) {
 			try {
 				p.load(in);
