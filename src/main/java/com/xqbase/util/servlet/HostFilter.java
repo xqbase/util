@@ -36,25 +36,26 @@ public class HostFilter implements Filter {
 	public void destroy() {/**/}
 
 	@Override
-	public void doFilter(ServletRequest req, ServletResponse resp,
+	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		if (!(req instanceof HttpServletRequest &&
-				resp instanceof HttpServletResponse)) {
+		if (!(request instanceof HttpServletRequest &&
+				response instanceof HttpServletResponse)) {
 			return;
 		}
-		HttpServletRequest req_ = (HttpServletRequest) req;
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse resp = (HttpServletResponse) response;
 		// "getRequestURI()" is available for HttpServlet, but not Filter
-		// String prefix = req_.getContextPath() + req_.getServletPath();
-		// String path = req_.getRequestURI();
-		String prefix = req_.getContextPath();
-		String path = req_.getServletPath();
+		// String prefix = req.getContextPath() + req.getServletPath();
+		// String path = req.getRequestURI();
+		String prefix = req.getContextPath();
+		String path = req.getServletPath();
 		if (path.startsWith(prefix)) {
 			path = path.substring(prefix.length());
 		}
-		String query = req_.getQueryString();
+		String query = req.getQueryString();
 		String suffix = (path == null ? "" : path) +
 				(query == null || query.isEmpty() ? "" : "?" + query);
-		String host = req.getServerName();
+		String host = request.getServerName();
 		prefix = map.get(host);
 		if (prefix == null) {
 			for (String wildcard : wildcards) {
@@ -68,13 +69,14 @@ public class HostFilter implements Filter {
 			}
 		}
 		if (prefix == null || prefix.isEmpty()) {
-			chain.doFilter(req, resp);
+			chain.doFilter(request, response);
 		} else if (prefix.startsWith("forward:")) {
-			req.getRequestDispatcher(prefix.substring(8) + suffix).forward(req, resp);
+			request.getRequestDispatcher(prefix.substring(8) +
+					suffix).forward(request, response);
 		} else {
 			int hash = prefix.indexOf('#');
-			((HttpServletResponse) resp).setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
-			((HttpServletResponse) resp).setHeader("Location", hash < 0 ?
+			resp.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+			resp.setHeader("Location", hash < 0 ?
 					prefix + suffix : prefix.substring(0, hash));
 		}
 	}

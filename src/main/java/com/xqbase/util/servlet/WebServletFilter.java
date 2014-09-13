@@ -149,17 +149,17 @@ public class WebServletFilter implements Filter, ServletConfig {
 	}
 
 	@Override
-	public void doFilter(ServletRequest req, ServletResponse resp,
+	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		if (filterConfig == null || !(req instanceof HttpServletRequest)) {
-			chain.doFilter(req, resp);
+		if (filterConfig == null || !(request instanceof HttpServletRequest)) {
+			chain.doFilter(request, response);
 			return;
 		}
-		HttpServletRequest req_ = (HttpServletRequest) req;
-		String prefix = req_.getContextPath();
-		String path = req_.getServletPath();
+		HttpServletRequest req = (HttpServletRequest) request;
+		String prefix = req.getContextPath();
+		String path = req.getServletPath();
 		if (path == null) {
-			chain.doFilter(req, resp);
+			chain.doFilter(request, response);
 			return;
 		}
 		if (path.startsWith(prefix)) {
@@ -185,7 +185,7 @@ public class WebServletFilter implements Filter, ServletConfig {
 			}
 		}
 		if (clazz == null) {
-			chain.doFilter(req, resp);
+			chain.doFilter(request, response);
 			return;
 		}
 		final Class<?> clazz_ = clazz;
@@ -214,26 +214,26 @@ public class WebServletFilter implements Filter, ServletConfig {
 			Log.e(e.getCause());
 		}
 		if (servlet == null) {
-			chain.doFilter(req, resp);
-		} else {
-			if (multiparts.contains(servlet.getClass())) {
-				try {
-					Object req__ = req;
-					if (req__.getClass().getName().equals(REQUEST_FACADE_CLASS)) {
-						req__ = requestField.get(req__);
-					}
-					multipartField.set(contextField.get(req__), Boolean.TRUE);
-				} catch (ReflectiveOperationException e) {
-					Log.e(e);
-				}
-			}
-			final String pathInfo_ = pathInfo;
-			servlet.service(new HttpServletRequestWrapper(req_) {
-				@Override
-				public String getPathInfo() {
-					return pathInfo_;
-				}
-			}, resp);
+			chain.doFilter(request, response);
+			return;
 		}
+		if (multiparts.contains(servlet.getClass())) {
+			try {
+				Object req_ = request;
+				if (req_.getClass().getName().equals(REQUEST_FACADE_CLASS)) {
+					req_ = requestField.get(req_);
+				}
+				multipartField.set(contextField.get(req_), Boolean.TRUE);
+			} catch (ReflectiveOperationException e) {
+				Log.e(e);
+			}
+		}
+		final String pathInfo_ = pathInfo;
+		servlet.service(new HttpServletRequestWrapper(req) {
+			@Override
+			public String getPathInfo() {
+				return pathInfo_;
+			}
+		}, response);
 	}
 }

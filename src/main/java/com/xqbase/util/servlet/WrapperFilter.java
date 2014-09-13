@@ -70,30 +70,30 @@ public class WrapperFilter implements Filter {
 	}
 
 	@Override
-	public void doFilter(ServletRequest req, ServletResponse resp,
+	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		if (!(req instanceof HttpServletRequest &&
-				resp instanceof HttpServletResponse)) {
-			chain.doFilter(req, resp);
+		if (!(request instanceof HttpServletRequest &&
+				response instanceof HttpServletResponse)) {
+			chain.doFilter(request, response);
 			return;
 		}
 		ArrayList<AutoCloseable> closeables_ = new ArrayList<>();
 		try {
-			HttpServletRequest newReq = (HttpServletRequest) req;
-			HttpServletResponse newResp = (HttpServletResponse) resp;
+			HttpServletRequest req = (HttpServletRequest) request;
+			HttpServletResponse resp = (HttpServletResponse) response;
 			for (WrapperFactory wrapperFactory : wrappers) {
-				Object wrapper = wrapperFactory.getWrapper(newReq, newResp);
+				Object wrapper = wrapperFactory.getWrapper(req, resp);
 				if (wrapper instanceof HttpServletRequest) {
-					newReq = (HttpServletRequest) wrapper;
+					req = (HttpServletRequest) wrapper;
 				}
 				if (wrapper instanceof HttpServletResponse) {
-					newResp = (HttpServletResponse) wrapper;
+					resp = (HttpServletResponse) wrapper;
 				}
 				if (wrapper instanceof AutoCloseable) {
 					closeables_.add((AutoCloseable) wrapper);
 				}
 			}
-			chain.doFilter(newReq, newResp);
+			chain.doFilter(req, resp);
 		} finally {
 			closeAll(closeables_);
 		}
