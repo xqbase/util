@@ -147,12 +147,12 @@ public class ProxyPassServlet extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) {
-		boolean valid = false;
 		String query = req.getQueryString();
 		String fullPath = basePath + req.getPathInfo() +
 				(query == null || query.isEmpty() ? "" : "?" + query);
 		String method = req.getMethod();
 
+		boolean valid = false;
 		Pool.Entry<Socket> socketEntry = null;
 		try {
 			// Request Head
