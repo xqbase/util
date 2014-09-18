@@ -1,11 +1,10 @@
 package com.xqbase.util.db;
 
-import java.io.Closeable;
 import java.io.PrintStream;
 
 import com.xqbase.util.Bytes;
 
-public class DumpCallback implements RowCallback, Closeable {
+public class DumpCallback implements RowCallback, AutoCloseable {
 	private static final int ROWS_PER_LINE = 256;
 
 	private int rows = 0, columns;

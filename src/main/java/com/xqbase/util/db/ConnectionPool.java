@@ -95,11 +95,9 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 
 	public int updateEx(long[] insertId, String sql,
 			Object... in) throws SQLException {
-		boolean valid = false;
-		Entry<Connection> entry = borrow();
-		try {
+		try (Entry entry = borrow()) {
 			int numRows;
-			try (PreparedStatement ps = entry.obj.prepareStatement(sql,
+			try (PreparedStatement ps = entry.getObject().prepareStatement(sql,
 					insertId == null ? Statement.NO_GENERATED_KEYS :
 					Statement.RETURN_GENERATED_KEYS)) {
 				for (int i = 0; i < in.length; i ++) {
@@ -124,10 +122,8 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 					numRows = -1;
 				}
 			}
-			valid = true;
+			entry.setValid(true);
 			return numRows;
-		} finally {
-			return_(entry, valid);
 		}
 	}
 
@@ -156,10 +152,8 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 
 	public <E extends Exception> void queryEx(RowCallbackEx<E> callback,
 			String sql, Object... in) throws E, SQLException {
-		boolean valid = false;
-		Entry<Connection> entry = borrow();
-		try {
-			try (PreparedStatement ps = entry.obj.prepareStatement(sql)) {
+		try (Entry entry = borrow()) {
+			try (PreparedStatement ps = entry.getObject().prepareStatement(sql)) {
 				for (int i = 0; i < in.length; i ++) {
 					ps.setObject(i + 1, in[i]);
 				}
@@ -169,9 +163,7 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 					}
 				}
 			}
-			valid = true;
-		} finally {
-			return_(entry, valid);
+			entry.setValid(true);
 		}
 	}
 

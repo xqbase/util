@@ -29,7 +29,6 @@ import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Bytes;
 import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
-import com.xqbase.util.Pool;
 import com.xqbase.util.SocketPool;
 
 public class ProxyPassServlet extends HttpServlet {
@@ -152,12 +151,9 @@ public class ProxyPassServlet extends HttpServlet {
 				(query == null || query.isEmpty() ? "" : "?" + query);
 		String method = req.getMethod();
 
-		boolean valid = false;
-		Pool.Entry<Socket> socketEntry = null;
-		try {
+		try (SocketPool.Entry socketEntry = pool.borrow()) {
 			// Request Head
-			socketEntry = pool.borrow();
-			Socket socket = socketEntry.obj;
+			Socket socket = socketEntry.getObject();
 			BufferedOutputStream outSocket = new
 					BufferedOutputStream(socket.getOutputStream());
 			write(outSocket, method);
@@ -313,7 +309,7 @@ public class ProxyPassServlet extends HttpServlet {
 			// Response Body
 			if (contentLength == 0 || method.equals("HEAD")) {
 				resp.setContentLength(contentLength);
-				valid = !close;
+				socketEntry.setValid(!close);
 				return;
 			}
 			OutputStream outResp = resp.getOutputStream();
@@ -321,7 +317,7 @@ public class ProxyPassServlet extends HttpServlet {
 			if (contentLength > 0) {
 				resp.setContentLength(contentLength);
 				copyResponse(inSocket, outResp, buffer, contentLength);
-				valid = !close;
+				socketEntry.setValid(!close);
 				return;
 			}
 
@@ -357,7 +353,7 @@ public class ProxyPassServlet extends HttpServlet {
 					}
 				}
 			}
-			valid = !close;
+			socketEntry.setValid(!close);
 
 		} catch (IOException e) {
 			if (e != CLIENT_EXCEPTION) {
@@ -369,10 +365,6 @@ public class ProxyPassServlet extends HttpServlet {
 					}
 				} catch (IOException e_) {/**/}
 				Log.w(e.getMessage());
-			}
-		} finally {
-			if (socketEntry != null) {
-				pool.return_(socketEntry, valid);
 			}
 		}
 	}

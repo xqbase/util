@@ -1,7 +1,6 @@
 package com.xqbase.util.http;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 
@@ -29,16 +28,12 @@ public class HttpPool extends SocketPool {
 	private int request(String path, ByteArrayQueue requestBody,
 			Map<String, List<String>> requestHeaders, boolean head, ByteArrayQueue responseBody,
 			Map<String, List<String>> responseHeaders) throws IOException {
-		boolean valid = false;
-		Entry<Socket> entry = borrow();
-		try {
+		try (Entry entry = borrow()) {
 			boolean[] connectionClose = {false};
-			int status = HttpUtil.request(entry.obj, path_ + path, host, proxyAuth, requestBody,
-					requestHeaders, head, responseBody, responseHeaders, connectionClose);
-			valid = !connectionClose[0];
+			int status = HttpUtil.request(entry.getObject(), path_ + path, host, proxyAuth,
+					requestBody, requestHeaders, head, responseBody, responseHeaders, connectionClose);
+			entry.setValid(!connectionClose[0]);
 			return status;
-		} finally {
-			return_(entry, valid);
 		}
 	}
 
@@ -61,14 +56,10 @@ public class HttpPool extends SocketPool {
 
 	public void pipeline(List<Pipeline.Request> requests,
 			List<Pipeline.Response> responses) throws IOException {
-		boolean valid = false;
-		Entry<Socket> entry = borrow();
-		try {
+		try (Entry entry = borrow()) {
 			boolean[] connectionClose = {false};
-			Pipeline.pipeline(entry.obj, host, requests, responses, connectionClose);
-			valid = !connectionClose[0];
-		} finally {
-			return_(entry, valid);
+			Pipeline.pipeline(entry.getObject(), host, requests, responses, connectionClose);
+			entry.setValid(!connectionClose[0]);
 		}
 	}
 }

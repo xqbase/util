@@ -127,13 +127,9 @@ public class TransportPool extends Pool<Transport, MessagingException> {
 	}
 
 	private void send(MimeMessage message) throws MessagingException {
-		boolean valid = false;
-		Entry<Transport> entry = borrow();
-		try {
-			entry.obj.sendMessage(message, message.getAllRecipients());
-			valid = true;
-		} finally {
-			return_(entry, valid);
+		try (Entry entry = borrow()) {
+			entry.object.sendMessage(message, message.getAllRecipients());
+			entry.setValid(true);
 		}
 	}
 
