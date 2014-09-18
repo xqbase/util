@@ -66,7 +66,7 @@ public class Executors {
 					poolSize, 1, TimeUnit.MINUTES, queue, new ThreadFactory() {
 				@Override
 				public Thread newThread(Runnable r) {
-					return new Thread(r, classLoader + "-" + nextId.incrementAndGet());
+					return new Thread(r, "executor-" + nextId.incrementAndGet());
 				}
 			});
 			service.allowCoreThreadTimeOut(true);
@@ -85,7 +85,7 @@ public class Executors {
 			return new ScheduledThreadPoolExecutor(timerPoolSize, new ThreadFactory() {
 				@Override
 				public Thread newThread(Runnable r) {
-					return new Thread(r, "timer-" + classLoader + "-" + nextId.incrementAndGet());
+					return new Thread(r, "timer-" + nextId.incrementAndGet());
 				}
 			});
 		}
