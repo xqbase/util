@@ -136,10 +136,10 @@ public class FastCGIServlet extends HttpServlet {
 			throw new ServletException("missing param \"addresses\"");
 		}
 		String command = getServletConfig().getInitParameter("command");
-		String[] s = addresses.split(",");
+		String[] s = addresses.split("[,;]");
 		socketQueue = new LinkedBlockingQueue<>();
 		for (int i = 0; i < s.length; i ++) {
-			String[] ss = s[i].split(":");
+			String[] ss = s[i].split("[:/]");
 			if (ss.length < 2) {
 				continue;
 			}
