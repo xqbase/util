@@ -40,11 +40,21 @@ class SocketEntry {
 
 	void destroy() {
 		if (process != null) {
-			process.destroy();
-			process = null;
-			requests = 0;
-			close();
+			return;
 		}
+		// Abort destroying process 1 minute later 
+		for (int i = 0; i < 60; i ++) {
+			process.destroy();
+			try {
+				process.exitValue();
+				break;
+			} catch (IllegalThreadStateException e) {
+				Time.sleep(1000);
+			}
+		}
+		process = null;
+		requests = 0;
+		close();
 	}
 }
 
@@ -328,21 +338,15 @@ public class FastCGIServlet extends HttpServlet {
 
 			entry.expire = System.currentTimeMillis() + timeout;
 		} catch (IOException e) {
-			if (e != CLIENT_EXCEPTION) {
+			if (e == CLIENT_EXCEPTION) {
+				entry.close();
+			} else {
 				Log.w(entry.host + ":" + entry.port + " - " + e.getMessage());
 				try {
 					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
 				} catch (IOException e_) {/**/}
-				if (entry.process != null) {
-					try {
-						entry.process.exitValue();
-						entry.destroy();
-					} catch (IllegalStateException e_) {
-						// Skip destroy if Process has not yet terminate
-					}
-				}
+				entry.destroy();
 			}
-			entry.close();
 		} finally {
 			if (entry.command != null) {
 				entry.requests ++;
