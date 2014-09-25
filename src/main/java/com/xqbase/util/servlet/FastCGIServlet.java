@@ -22,8 +22,8 @@ import com.xqbase.util.Numbers;
 import com.xqbase.util.Time;
 
 class SocketEntry {
-	String command, host;
-	int port;
+	String command;
+	InetSocketAddress addr;
 	Process process = null;
 	Socket socket = null;
 	int requests = 0;
@@ -39,22 +39,24 @@ class SocketEntry {
 	}
 
 	void destroy() {
-		if (process != null) {
+		if (process == null) {
 			return;
 		}
-		// Abort destroying process 1 minute later 
-		for (int i = 0; i < 60; i ++) {
+		// Abort destroying process 1 minute later
+		long begin = System.currentTimeMillis();
+		do {
 			process.destroy();
+			// Try process.waitFor(timeout, unit) in Java 1.8
+			Time.sleep(100);
 			try {
 				process.exitValue();
 				break;
 			} catch (IllegalThreadStateException e) {
-				Time.sleep(1000);
+				//
 			}
-		}
+		} while (System.currentTimeMillis() < begin + 60000);
 		process = null;
 		requests = 0;
-		close();
 	}
 }
 
@@ -155,8 +157,7 @@ public class FastCGIServlet extends HttpServlet {
 			}
 			SocketEntry entry = new SocketEntry();
 			entry.command = command == null ? null : command + " " + s[i];
-			entry.host = ss[0];
-			entry.port = Numbers.parseInt(ss[1]);
+			entry.addr = new InetSocketAddress(ss[0], Numbers.parseInt(ss[1]));
 			socketQueue.offer(entry);
 		}
 	}
@@ -184,17 +185,29 @@ public class FastCGIServlet extends HttpServlet {
 			} catch (IOException e) {/**/}
 			return;
 		}
-		if (System.currentTimeMillis() > entry.expire) {
+		long begin = System.currentTimeMillis();
+		if (begin > entry.expire) {
 			entry.close();
 		}
 		try {
 			if (entry.command != null && entry.process == null) {
 				entry.process = Runtime.getRuntime().exec(entry.command);
-				Time.sleep(1000);
-			}
-			if (entry.socket == null) {
+				while (true) {
+					entry.socket = new Socket();
+					try {
+						entry.socket.connect(entry.addr, 100);
+						break;
+					} catch (IOException e) {
+						if (System.currentTimeMillis() > begin + timeout) {
+							throw e;
+						}
+						entry.socket.close();
+					}
+				}
+				entry.socket.setSoTimeout(timeout);
+			} else if (entry.socket == null) {
 				entry.socket = new Socket();
-				entry.socket.connect(new InetSocketAddress(entry.host, entry.port), timeout);
+				entry.socket.connect(entry.addr, timeout);
 				entry.socket.setSoTimeout(timeout);
 			}
 			OutputStream out = entry.socket.getOutputStream();
@@ -338,10 +351,9 @@ public class FastCGIServlet extends HttpServlet {
 
 			entry.expire = System.currentTimeMillis() + timeout;
 		} catch (IOException e) {
-			if (e == CLIENT_EXCEPTION) {
-				entry.close();
-			} else {
-				Log.w(entry.host + ":" + entry.port + " - " + e.getMessage());
+			entry.close();
+			if (e != CLIENT_EXCEPTION) {
+				Log.w(entry.addr + " - " + e.getMessage());
 				try {
 					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
 				} catch (IOException e_) {/**/}
@@ -351,6 +363,7 @@ public class FastCGIServlet extends HttpServlet {
 			if (entry.command != null) {
 				entry.requests ++;
 				if (entry.requests == maxRequests) {
+					entry.close();
 					entry.destroy();
 				}
 			}
