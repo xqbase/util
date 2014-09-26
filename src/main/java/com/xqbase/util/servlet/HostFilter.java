@@ -23,12 +23,14 @@ public class HostFilter implements Filter {
 		Enumeration<?> e = conf.getInitParameterNames();
 		while (e.hasMoreElements()) {
 			String key = (String) e.nextElement();
-			String value = conf.getInitParameter(key);
-			if (key.startsWith("*")) {
+			if (key.isEmpty()) {
+				continue;
+			}
+			if (key.charAt(0) == '*') {
 				key = key.substring(1);
 				wildcards.add(key);
 			}
-			map.put(key, value);
+			map.put(key, conf.getInitParameter(key));
 		}
 	}
 
