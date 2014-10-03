@@ -29,11 +29,11 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 		public boolean isValid() {
 			return valid;
 		}
-	
+
 		public void setValid(boolean valid) {
 			this.valid = valid;
 		}
-	
+
 		@Override
 		public void close() {
 			activeCount.decrementAndGet();

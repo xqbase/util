@@ -14,7 +14,7 @@ public class ByteArrayQueue implements Cloneable {
 	private int offset = 0;
 	private int length = 0;
 
-	/** Creates a new ByteArrayQueue that shares this ByteArrayQueue's content. */ 
+	/** Creates a new ByteArrayQueue that shares this ByteArrayQueue's content. */
 	@Override
 	public ByteArrayQueue clone() {
 		return new ByteArrayQueue(array, offset, length);
