@@ -53,8 +53,9 @@ public class Conf {
 	}
 
 	private static String getConfPath(String name, String confDir_) {
-		return confDir_ == null ? locate("conf/" +
-				name + ".properties") : confDir_ + name + ".properties";
+		return confDir_ == null ? locate("conf/" + name + ".properties") :
+				(confDir_.endsWith("/") ? confDir_ : confDir_ + "/") +
+				name + ".properties";
 	}
 
 	private static Class<?> getParentClass() {
@@ -110,8 +111,10 @@ public class Conf {
 		}
 		FileHandler handler;
 		try {
-			String pattern = logDir == null ? locate("logs/" +
-					name + "%g.log") : logDir + name + "%g.log";
+			String logDir_ = logDir == null ? locate("logs") : logDir;
+			new File(logDir_).mkdirs();
+			String pattern = (logDir_.endsWith("/") ? logDir_ : logDir_ + "/") +
+					name + "%g.log";
 			handler = new FileHandler(pattern, limit, count, true);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
