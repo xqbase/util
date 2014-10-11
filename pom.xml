@@ -28,7 +28,7 @@
 	<scm>
 		<connection>scm:git:git@github.com:xqbase/util.git</connection>
 		<developerConnection>scm:git:git@github.com:xqbase/util.git</developerConnection>
-		<url>git@github.com:xqbase/util.git</url>
+		<url>https://github.com/xqbase/util.git</url>
 	</scm>
 
 	<properties>
