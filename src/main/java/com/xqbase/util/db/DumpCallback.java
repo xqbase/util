@@ -38,7 +38,7 @@ public class DumpCallback implements RowCallback, AutoCloseable {
 		for (int i = 0; i < columns; i ++) {
 			Object o = row.get(i + 1);
 			if (o == null) {
-				sb.append(", null");
+				sb.append(", NULL");
 			} else if (o instanceof String) {
 				sb.append(", '" + ((String) o).replace("\\", "\\\\").
 						replace("\'", "\\\'") + "'");

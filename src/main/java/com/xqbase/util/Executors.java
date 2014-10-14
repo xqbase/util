@@ -8,6 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/** @see com.xqbase.util.Command */
+@Deprecated
 public class Executors {
 	static class Command implements Runnable {
 		private String suffix = Log.suffix.get();
@@ -38,7 +40,6 @@ public class Executors {
 
 	static int poolSize = 100;
 	static int timerPoolSize = 10;
-	static String classLoader = Executors.class.getClassLoader().toString();
 	static AtomicInteger nextId = new AtomicInteger(0);
 	static AtomicInteger threadNum = new AtomicInteger(0);
 	static LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
