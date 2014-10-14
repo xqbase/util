@@ -34,8 +34,8 @@ public class ShutdownHook implements SignalHandler {
 		return interrupted.get();
 	}
 
-	public void execute(Runnable command) {
-		Thread thread = new Thread(command);
+	public void execute(Runnable runnable) {
+		Thread thread = new Thread(runnable);
 		thread.start();
 		threads.offer(thread);
 	}

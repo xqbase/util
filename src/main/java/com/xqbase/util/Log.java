@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,9 +23,22 @@ public class Log {
 		return logger_.getAndSet(logger);
 	}
 
-	private static final int TOP_CUT_DEPTH = 4;
-	private static final int BOTTOM_CUT_DEPTH = 2;
 	private static final StackTraceElement[] EMPTY_STACK_TRACE = {};
+	private static final HashSet<String> THREAD_CLASSES = new HashSet<>(Arrays.
+			asList("java.lang.Thread",
+			"java.util.concurrent.ThreadPoolExecutor",
+			"java.util.concurrent.ThreadPoolExecutor$Worker",
+			"com.xqbase.util.Runnables",
+			"com.xqbase.util.Runnables$1",
+			"com.xqbase.util.Runnables$2"));
+
+	private static void concat(ArrayList<StackTraceElement> stes, Throwable t) {
+		for (StackTraceElement ste : t.getStackTrace()) {
+			if (!THREAD_CLASSES.contains(ste.getClassName())) {
+				stes.add(ste);
+			}
+		}
+	}
 
 	private static Throwable concat(Throwable t) {
 		Throwable atop = throwable.get();
@@ -44,23 +59,12 @@ public class Log {
 		}
 		// concatenate t with atop
 		ArrayList<StackTraceElement> stes = new ArrayList<>();
-		StackTraceElement[] stackTrace = cloned.getStackTrace();
-		for (int i = 0; i < stackTrace.length - TOP_CUT_DEPTH; i ++) {
-			stes.add(stackTrace[i]);
-		}
-		int len;
+		concat(stes, cloned);
 		do {
-			stackTrace = atop.getStackTrace();
-			len = Math.max(BOTTOM_CUT_DEPTH, stackTrace.length - TOP_CUT_DEPTH);
-			for (int i = BOTTOM_CUT_DEPTH; i < len; i ++) {
-				stes.add(stackTrace[i]);
-			}
-			// t_.getCause() is atop t_, see Executors.Command for more details
+			concat(stes, atop);
+			// t_.getCause() is atop t_, see Runnables for more details
 			atop = atop.getCause();
 		} while (atop != null);
-		for (int i = len; i < stackTrace.length; i ++) {
-			stes.add(stackTrace[i]);
-		}
 		cloned.setStackTrace(stes.toArray(EMPTY_STACK_TRACE));
 		return cloned;
 	}

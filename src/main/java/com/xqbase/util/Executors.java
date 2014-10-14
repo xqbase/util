@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** @see com.xqbase.util.Command */
+/** @see com.xqbase.util.Runnables */
 @Deprecated
 public class Executors {
 	static class Command implements Runnable {
