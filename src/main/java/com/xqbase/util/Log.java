@@ -27,14 +27,16 @@ public class Log {
 	private static final HashSet<String> THREAD_CLASSES = new HashSet<>(Arrays.
 			asList("java.lang.Thread",
 			"java.util.concurrent.ThreadPoolExecutor",
-			"java.util.concurrent.ThreadPoolExecutor$Worker",
-			"com.xqbase.util.Runnables",
-			"com.xqbase.util.Runnables$1",
-			"com.xqbase.util.Runnables$2"));
+			"com.xqbase.util.Runnables"));
 
 	private static void concat(ArrayList<StackTraceElement> stes, Throwable t) {
 		for (StackTraceElement ste : t.getStackTrace()) {
-			if (!THREAD_CLASSES.contains(ste.getClassName())) {
+			String className = ste.getClassName();
+			int dollar = className.indexOf('$');
+			if (dollar >= 0) {
+				className = className.substring(0, dollar);
+			}
+			if (!THREAD_CLASSES.contains(className)) {
 				stes.add(ste);
 			}
 		}

@@ -5,6 +5,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/** @see HostFilter */
+@Deprecated
 public class RedirectServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 

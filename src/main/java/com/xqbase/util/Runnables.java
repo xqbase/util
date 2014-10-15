@@ -47,6 +47,8 @@ public class Runnables {
 				Log.throwable.set(t);
 				try {
 					return callable.call();
+				} catch (Error e) {
+					throw new Exception(e);
 				} finally {
 					Log.throwable.remove();
 					Log.suffix.remove();
