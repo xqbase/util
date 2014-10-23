@@ -162,6 +162,16 @@ public class Conf {
 	private static final HashSet<String> FALSE_VALUES =
 			new HashSet<>(Arrays.asList("false", "no", "off", "disable", "disabled"));
 
+	public static boolean getBoolean(String value, boolean defaultValue) {
+		if (value == null) {
+			return defaultValue;
+		}
+		String value_ = value.trim().toLowerCase();
+		return defaultValue ? !FALSE_VALUES.contains(value_) : TRUE_VALUES.contains(value_);
+	}
+
+	/** @see #getBoolean(String, boolean) */
+	@Deprecated
 	public static boolean getBoolean(Properties p, String key, boolean defaultValue) {
 		String value = p.getProperty(key);
 		if (value == null) {
