@@ -56,8 +56,8 @@ public class ForwardedWrapper implements WrapperFactory {
 			} catch (GeneralSecurityException e) {/**/}
 		}
 
-		final String scheme_ = scheme;
-		final String remote_ = remote;
+		String scheme_ = scheme;
+		String remote_ = remote;
 		return new HttpServletRequestWrapper(req) {
 			@Override
 			public String getScheme() {

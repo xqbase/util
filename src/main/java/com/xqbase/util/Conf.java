@@ -170,17 +170,6 @@ public class Conf {
 		return defaultValue ? !FALSE_VALUES.contains(value_) : TRUE_VALUES.contains(value_);
 	}
 
-	/** @see #getBoolean(String, boolean) */
-	@Deprecated
-	public static boolean getBoolean(Properties p, String key, boolean defaultValue) {
-		String value = p.getProperty(key);
-		if (value == null) {
-			return defaultValue;
-		}
-		value = value.trim().toLowerCase();
-		return defaultValue ? !FALSE_VALUES.contains(value) : TRUE_VALUES.contains(value);
-	}
-
 	private static void search(ArrayList<String> classes, String root, String path) {
 		File folder = new File(root + path);
 		String[] list = folder.list();

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Enumeration;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -44,21 +43,18 @@ public class ScriptServlet extends HttpServlet {
 				compiledMap = new ConcurrentHashMap<>();
 
 		private FutureTask<CompiledScript>
-				getCompileTask(final File file, final Compilable engine) {
-			return new FutureTask<>(new Callable<CompiledScript>() {
-				@Override
-				public CompiledScript call() throws IOException, ScriptException {
-					try (FileReader script = new FileReader(file)) {
-						return doCompile(engine, script);
-					}
+				getCompileTask(File file, Compilable engine) {
+			return new FutureTask<>(() -> {
+				try (FileReader script = new FileReader(file)) {
+					return doCompile(engine, script);
 				}
 			});
 		}
 
 		@Override
-		protected void doEval(final File file, final ScriptContext context)
+		protected void doEval(File file, ScriptContext context)
 				throws IOException, ScriptException {
-			final ScriptEngine engine = ScriptUtil.getEngine();
+			ScriptEngine engine = ScriptUtil.getEngine();
 			if (!(engine instanceof Compilable)) {
 				// Run script if not compilable
 				try (FileReader script = new FileReader(file)) {

@@ -137,14 +137,11 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 	}
 
 	public Row queryEx(String sql, Object... in) throws SQLException {
-		final Row[] row_ = {null};
+		Row[] row_ = {null};
 		try {
-			queryEx(new RowCallbackEx<SingleRowException>() {
-				@Override
-				public void onRow(Row row) throws SingleRowException {
-					row_[0] = row;
-					throw new SingleRowException();
-				}
+			queryEx(row -> {
+				row_[0] = row;
+				throw new SingleRowException();
 			}, sql, in);
 		} catch (SingleRowException e) {/**/}
 		return row_[0];

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -89,7 +88,7 @@ public class WebServletFilter implements Filter, ServletConfig {
 	}
 
 	@Override
-	public void init(final FilterConfig config) {
+	public void init(FilterConfig config) {
 		String packages = config.getInitParameter("packages");
 		if (packages == null) {
 			return;
@@ -188,16 +187,13 @@ public class WebServletFilter implements Filter, ServletConfig {
 			chain.doFilter(request, response);
 			return;
 		}
-		final Class<?> clazz_ = clazz;
+		Class<?> clazz_ = clazz;
 		FutureTask<HttpServlet> task = servletMap.get(clazz);
 		if (task == null) {
-			FutureTask<HttpServlet> newTask = new FutureTask<>(new Callable<HttpServlet>() {
-				@Override
-				public HttpServlet call() throws Exception {
-					HttpServlet servlet = (HttpServlet) clazz_.newInstance();
-					servlet.init(WebServletFilter.this);
-					return servlet;
-				}
+			FutureTask<HttpServlet> newTask = new FutureTask<>(() -> {
+				HttpServlet servlet = (HttpServlet) clazz_.newInstance();
+				servlet.init(WebServletFilter.this);
+				return servlet;
 			});
 			task = servletMap.putIfAbsent(clazz, newTask);
 			if (task == null) {
@@ -228,7 +224,7 @@ public class WebServletFilter implements Filter, ServletConfig {
 				Log.e(e);
 			}
 		}
-		final String pathInfo_ = pathInfo;
+		String pathInfo_ = pathInfo;
 		servlet.service(new HttpServletRequestWrapper(req) {
 			@Override
 			public String getPathInfo() {

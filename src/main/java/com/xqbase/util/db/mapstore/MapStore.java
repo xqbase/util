@@ -67,7 +67,7 @@ public class MapStore implements AutoCloseable {
 	}
 
 	public TreeSet<String> keySet(String prefix) {
-		final TreeSet<String> keySet;
+		TreeSet<String> keySet;
 		synchronized (this) {
 			if (prefix == null) {
 				keySet = new TreeSet<>(valueMap.keySet());
@@ -75,12 +75,7 @@ public class MapStore implements AutoCloseable {
 				keySet = new TreeSet<>(keySet0(prefix));
 			}
 		}
-		RowCallback callback = new RowCallback() {
-			@Override
-			public void onRow(Row row) {
-				keySet.add(row.getString(1));
-			}
-		};
+		RowCallback callback = row -> keySet.add(row.getString(1));
 		try {
 			if (prefix == null) {
 				String sql = "SELECT name FROM " + table;

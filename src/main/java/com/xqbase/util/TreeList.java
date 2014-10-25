@@ -385,13 +385,4 @@ public class TreeList<E extends Comparable<E>> implements Iterable<E> {
 			}
 		};
 	}
-
-	public Iterable<E> descendingIterable() {
-		return new Iterable<E>() {
-			@Override
-			public Iterator<E> iterator() {
-				return descendingIterator();
-			}
-		};
-	}
 }
