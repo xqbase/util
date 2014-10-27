@@ -26,7 +26,7 @@ import java.util.logging.SimpleFormatter;
 public class Conf {
 	public static boolean DEBUG = false;
 
-	private static String confDir = null, logDir = null;
+	private static String rootDir = null, confDir = null, logDir = null;
 
 	static {
 		for (String argument : ManagementFactory.
@@ -73,28 +73,38 @@ public class Conf {
 		return Conf.class;
 	}
 
-	public static String locate(String path) {
-		Class<?> parentClass = getParentClass();
-		String classFile = parentClass.getName().replace('.', '/') + ".class";
-		URL url = parentClass.getResource("/" + classFile);
-		if (url == null) {
-			return path;
+	public static synchronized void setRoot(String absolute) {
+		if (absolute != null) {
+			rootDir = new File(absolute).getAbsolutePath();
 		}
+	}
+
+	public static synchronized String locate(String path) {
 		try {
-			String root;
-			if (url.getProtocol().equals("jar")) {
-				root = url.getPath();
-				int i = root.lastIndexOf('!');
-				if (i >= 0) {
-					root = root.substring(0, i);
+			if (rootDir == null) {
+				Class<?> parentClass = getParentClass();
+				String classFile = parentClass.getName().replace('.', '/') + ".class";
+				URL url = parentClass.getResource("/" + classFile);
+				if (url == null) {
+					return null;
 				}
-				root = new File(new URL(root).toURI()).getParent();
-			} else {
-				root = new File(url.toURI()).getPath();
-				root = root.substring(0, root.length() - classFile.length());
+				if (url.getProtocol().equals("jar")) {
+					rootDir = url.getPath();
+					int i = rootDir.lastIndexOf('!');
+					if (i >= 0) {
+						rootDir = rootDir.substring(0, i);
+					}
+					rootDir = new File(new URL(rootDir).toURI()).getParent();
+				} else {
+					rootDir = new File(url.toURI()).getPath();
+					rootDir = rootDir.substring(0, rootDir.length() - classFile.length());
+					if (rootDir.endsWith(File.separator)) {
+						rootDir = rootDir.substring(0, rootDir.length() - 1);
+					}
+				}
+				rootDir = new File(rootDir).getParent();
 			}
-			return new File(root + File.separator + ".." +
-					File.separator + path).getCanonicalPath();
+			return new File(rootDir + File.separator + path).getCanonicalPath();
 		} catch (IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
