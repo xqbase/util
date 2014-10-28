@@ -42,19 +42,17 @@ class SocketEntry {
 		if (process == null) {
 			return;
 		}
-		// Abort destroying process 1 minute later
-		long begin = System.currentTimeMillis();
-		do {
-			process.destroy();
-			// Try process.waitFor(timeout, unit) in Java 1.8
-			Time.sleep(100);
-			try {
-				process.exitValue();
-				break;
-			} catch (IllegalThreadStateException e) {
-				//
+		try {
+			// Abort destroying process 1 minute later
+			for (int i = 0; i < 60; i ++) {
+				process.destroy();
+				if (process.waitFor(Time.SECOND, TimeUnit.MILLISECONDS)) {
+					break;
+				}
 			}
-		} while (System.currentTimeMillis() < begin + 60000);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 		process = null;
 		requests = 0;
 	}
