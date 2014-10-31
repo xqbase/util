@@ -40,27 +40,27 @@ public class Row {
 		return (byte[]) get(column);
 	}
 
-	/** Available until Year 2016 */
+	/** Available until Year 2106 */
 	public long getTime(int column) {
 		return (getInt(column) & 0xFFFFFFFFL) * 1000;
 	}
 
-	/** Available until Year 2016 */
+	/** Available until Year 2106 */
 	public static int setTime(long time) {
 		return (int) (time / 1000);
 	}
 
-	/** Available until Year 2016 */
+	/** Available until Year 2106 */
 	public static Integer setTimeEx(long time) {
 		return Integer.valueOf(setTime(time));
 	}
 
-	/** Available until Year 2016 */
+	/** Available until Year 2106 */
 	public static int now() {
 		return setTime(System.currentTimeMillis());
 	}
 
-	/** Available until Year 2016 */
+	/** Available until Year 2106 */
 	public static Integer nowEx() {
 		return Integer.valueOf(now());
 	}
