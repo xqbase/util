@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,7 +25,6 @@ import sun.security.pkcs.PKCS7;
 import sun.security.pkcs.SignerInfo;
 import sun.security.x509.AlgorithmId;
 
-import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Bytes;
 import com.xqbase.util.Log;
@@ -192,7 +192,8 @@ public class ProxyPassServlet extends HttpServlet {
 						(X509Certificate[]) certs, new SignerInfo[0]).
 						encodeSignedData(baq.getOutputStream());
 				writeHeader(outSocket, "X-Pkcs7-Certificates-Base64",
-						Base64.encode(baq.array(), baq.offset(), baq.length()));
+						Base64.getEncoder().encodeToString(Bytes.
+						sub(baq.array(), baq.offset(), baq.length())));
 			}
 			writeHeader(outSocket, "Connection", "Keep-Alive");
 

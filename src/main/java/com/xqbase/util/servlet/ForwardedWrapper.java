@@ -4,6 +4,7 @@ import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -12,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
 
 public class ForwardedWrapper implements WrapperFactory {
@@ -47,7 +47,7 @@ public class ForwardedWrapper implements WrapperFactory {
 		String pkcs7 = req.getHeader("X-Pkcs7-Certificates-Base64");
 		if (pkcs7 != null) {
 			ByteArrayQueue baq = new ByteArrayQueue();
-			baq.add(Base64.decode(pkcs7));
+			baq.add(Base64.getDecoder().decode(pkcs7));
 			try {
 				Collection<? extends Certificate> certs = CertificateFactory.
 						getInstance("X509").generateCertificates(baq.getInputStream());
