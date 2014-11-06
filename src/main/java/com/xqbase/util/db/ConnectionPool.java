@@ -22,10 +22,10 @@ class SingleRowException extends Exception {
 }
 
 public class ConnectionPool extends Pool<Connection, SQLException> {
-	private static Object[] valueOf(int... values) {
+	private static Object[] valueOf(long... values) {
 		Object[] objs = new Object[values.length];
 		for (int i = 0; i < values.length; i ++) {
-			objs[i] = Integer.valueOf(values[i]);
+			objs[i] = Long.valueOf(values[i]);
 		}
 		return objs;
 	}
@@ -62,35 +62,17 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		} catch (SQLException e) {/**/}
 	}
 
-	public int update(String sql, int... in) throws SQLException {
+	public int update(String sql, long... in) throws SQLException {
 		return updateEx(sql, valueOf(in));
 	}
 
-	public int update(int[] insertId, String sql,
-			int... in) throws SQLException {
-		return updateEx(insertId, sql, valueOf(in));
-	}
-
 	public int update(long[] insertId, String sql,
-			int... in) throws SQLException {
+			long... in) throws SQLException {
 		return updateEx(insertId, sql, valueOf(in));
 	}
 
 	public int updateEx(String sql, Object... in) throws SQLException {
 		return updateEx((long[]) null, sql, in);
-	}
-
-	public int updateEx(int[] insertId, String sql,
-			Object... in) throws SQLException {
-		if (insertId == null) {
-			return updateEx((long[]) null, sql, in);
-		}
-		long[] insertId_ = new long[insertId.length];
-		int rows = updateEx(insertId_, sql, in);
-		for (int i = 0; i < insertId.length; i ++) {
-			insertId[i] = (int) insertId_[i];
-		}
-		return rows;
 	}
 
 	public int updateEx(long[] insertId, String sql,
@@ -127,12 +109,12 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		}
 	}
 
-	public Row query(String sql, int... in) throws SQLException {
+	public Row query(String sql, long... in) throws SQLException {
 		return queryEx(sql, valueOf(in));
 	}
 
 	public <E extends Exception> void query(RowCallbackEx<E> callback,
-			String sql, int... in) throws E, SQLException {
+			String sql, long... in) throws E, SQLException {
 		queryEx(callback, sql, valueOf(in));
 	}
 

@@ -32,6 +32,11 @@ public class Row {
 		return n == null ? 0 : n.intValue();
 	}
 
+	public long getLong(int column) {
+		Number n = (Number) get(column);
+		return n == null ? 0 : n.longValue();
+	}
+
 	public String getString(int column) {
 		return (String) get(column);
 	}
@@ -40,28 +45,7 @@ public class Row {
 		return (byte[]) get(column);
 	}
 
-	/** Available until Year 2106 */
-	public long getTime(int column) {
-		return (getInt(column) & 0xFFFFFFFFL) * 1000;
-	}
-
-	/** Available until Year 2106 */
-	public static int setTime(long time) {
-		return (int) (time / 1000);
-	}
-
-	/** Available until Year 2106 */
-	public static Integer setTimeEx(long time) {
-		return Integer.valueOf(setTime(time));
-	}
-
-	/** Available until Year 2106 */
-	public static int now() {
-		return setTime(System.currentTimeMillis());
-	}
-
-	/** Available until Year 2106 */
-	public static Integer nowEx() {
-		return Integer.valueOf(now());
+	public static Long now() {
+		return Long.valueOf(System.currentTimeMillis());
 	}
 }
