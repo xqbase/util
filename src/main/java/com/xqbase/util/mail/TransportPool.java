@@ -18,6 +18,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
 import com.xqbase.util.Pool;
+import com.xqbase.util.SupplierEx;
 
 public class TransportPool extends Pool<Transport, MessagingException> {
 	public static boolean validate(String email) {
@@ -36,37 +37,33 @@ public class TransportPool extends Pool<Transport, MessagingException> {
 	}
 
 	private Session session;
-	private String protocol, user, password;
 	private InternetAddress from;
 
 	public TransportPool(Session session, String protocol,
 			String user, String password, InternetAddress from) {
-		super(60000);
+		super(new SupplierEx<Transport, MessagingException>() {
+			@Override
+			public Transport get() throws MessagingException {
+				Transport transport = session.getTransport(protocol);
+				try {
+					transport.connect(user, password);
+					return transport;
+				} catch (MessagingException e) {
+					transport.close();
+					throw e;
+				}
+			}
+
+			/** {@link Transport} is not a {@link AutoCloseable} */
+			@Override
+			public void close(Transport transport) {
+				try {
+					transport.close();
+				} catch (MessagingException e) {/**/}
+			}
+		}, 60000);
 		this.session = session;
-		this.protocol = protocol;
-		this.user = user;
-		this.password = password;
 		this.from = from;
-	}
-
-	@Override
-	protected Transport makeObject() throws MessagingException {
-		Transport transport = session.getTransport(protocol);
-		try {
-			transport.connect(user, password);
-			return transport;
-		} catch (MessagingException e) {
-			transport.close();
-			throw e;
-		}
-	}
-
-	/** {@link Transport} is not a {@link AutoCloseable} */
-	@Override
-	protected void destroyObject(Transport transport) {
-		try {
-			transport.close();
-		} catch (MessagingException e) {/**/}
 	}
 
 	private static void setText(MimePart part, String plainText,

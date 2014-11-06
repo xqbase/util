@@ -46,32 +46,21 @@ public class SocketPool extends Pool<Socket, IOException> {
 		}
 	}
 
-	private String host;
-	private int port, timeout;
-	private boolean secure;
-
 	public SocketPool(String host, int port, int timeout) {
 		this(host, port, false, timeout);
 	}
 
 	public SocketPool(String host, int port, boolean secure, int timeout) {
-		super(timeout);
-		this.host = host;
-		this.port = port;
-		this.secure = secure;
-		this.timeout = timeout;
-	}
-
-	@Override
-	protected Socket makeObject() throws IOException {
-		Socket socket = createSocket(secure);
-		try {
-			socket.connect(new InetSocketAddress(host, port), timeout);
-			socket.setSoTimeout(timeout);
-			return socket;
-		} catch (IOException e) {
-			socket.close();
-			throw e;
-		}
+		super(() -> {
+			Socket socket = createSocket(secure);
+			try {
+				socket.connect(new InetSocketAddress(host, port), timeout);
+				socket.setSoTimeout(timeout);
+				return socket;
+			} catch (IOException e) {
+				socket.close();
+				throw e;
+			}
+		}, timeout);
 	}
 }

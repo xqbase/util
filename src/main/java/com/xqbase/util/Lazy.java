@@ -1,16 +1,18 @@
 package com.xqbase.util;
 
-public abstract class Lazy<T> implements AutoCloseable {
+public class Lazy<T, E extends Exception> implements AutoCloseable {
+	private SupplierEx<T, E> supplier;
 	private volatile T instance = null;
 
-	protected abstract T makeObject();
-	protected abstract void destroyObject(T obj);
+	public Lazy(SupplierEx<T, E> supplier) {
+		this.supplier = supplier;
+	}
 
-	public T get() {
+	public T get() throws E {
 		if (instance == null) {
 			synchronized (this) {
 				if (instance == null) {
-					instance = makeObject();
+					instance = supplier.get();
 				}
 			}
 		}
@@ -23,7 +25,7 @@ public abstract class Lazy<T> implements AutoCloseable {
 			if (instance != null) {
 				T instance_ = instance;
 				instance = null;
-				destroyObject(instance_);
+				supplier.close(instance_);
 			}
 		}
 	}

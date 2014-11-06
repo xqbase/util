@@ -30,36 +30,23 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		return objs;
 	}
 
-	private Driver driver;
-	private String url;
-	private Properties info = new Properties();
-
-	public ConnectionPool(Driver driver, String url) {
-		this(driver, url, null, null);
-	}
-
-	public ConnectionPool(Driver driver, String url, String user, String password) {
-		super(60000);
-		this.driver = driver;
-		this.url = url;
+	private static Properties getInfo(String user, String password) {
+		Properties info = new Properties();
 		if (user != null) {
 			info.put("user", user);
 		}
 		if (password != null) {
 			info.put("password", password);
 		}
+		return info;
 	}
 
-	@Override
-	protected Connection makeObject() throws SQLException {
-		return driver.connect(url, info);
+	public ConnectionPool(Driver driver, String url) {
+		this(driver, url, null, null);
 	}
 
-	@Override
-	protected void destroyObject(Connection conn) {
-		try {
-			conn.close();
-		} catch (SQLException e) {/**/}
+	public ConnectionPool(Driver driver, String url, String user, String password) {
+		super(() -> driver.connect(url, getInfo(user, password)), 60000);
 	}
 
 	public int update(String sql, long... in) throws SQLException {

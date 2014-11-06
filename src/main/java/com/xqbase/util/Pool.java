@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class Pool<T, E extends Exception> implements AutoCloseable {
+public class Pool<T, E extends Exception> implements AutoCloseable {
 	public class Entry implements AutoCloseable {
 		T object;
 		long created, borrowed, borrows;
@@ -38,31 +38,23 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 		public void close() {
 			activeCount.decrementAndGet();
 			if (closed || !valid) {
-				destroyObject(object);
+				supplier.close(object);
 			} else {
 				deque.offerFirst(this);
 			}
 		}
 	}
 
-	protected abstract T makeObject() throws E;
-
-	protected void destroyObject(T obj) {
-		if (obj instanceof AutoCloseable) {
-			try {
-				((AutoCloseable) obj).close();
-			} catch (Exception e) {/**/}
-		}
-	}
-
 	private int timeout;
 	private AtomicLong accessed = new AtomicLong(System.currentTimeMillis());
 
+	SupplierEx<T, E> supplier;
 	ConcurrentLinkedDeque<Entry> deque = new ConcurrentLinkedDeque<>();
 	AtomicInteger activeCount = new AtomicInteger(0);
 	volatile boolean closed = false;
 
-	public Pool(int timeout) {
+	public Pool(SupplierEx<T, E> supplier, int timeout) {
+		this.supplier = supplier;
 		this.timeout = timeout;
 	}
 
@@ -78,7 +70,7 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 						deque.offerLast(entry);
 						break;
 					}
-					destroyObject(entry.object);
+					supplier.close(entry.object);
 				}
 			}
 		}
@@ -91,7 +83,7 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 			return entry;
 		}
 		entry = new Entry();
-		entry.object = makeObject();
+		entry.object = supplier.get();
 		entry.created = entry.borrowed = now;
 		entry.borrows = 0;
 		entry.valid = false;
@@ -117,7 +109,7 @@ public abstract class Pool<T, E extends Exception> implements AutoCloseable {
 		Entry entry;
 		while ((entry = deque.pollFirst()) != null) {
 			activeCount.decrementAndGet();
-			destroyObject(entry.object);
+			supplier.close(entry.object);
 		}
 	}
 }
