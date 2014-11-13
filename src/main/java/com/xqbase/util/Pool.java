@@ -4,6 +4,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.xqbase.util.function.ConsumerEx;
+import com.xqbase.util.function.SupplierEx;
+
 public class Pool<T, E extends Exception> implements AutoCloseable {
 	public class Entry implements AutoCloseable {
 		T object;
@@ -38,7 +41,11 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		public void close() {
 			activeCount.decrementAndGet();
 			if (closed || !valid) {
-				supplier.close(object);
+				try {
+					finalizer.accept(object);
+				} catch (Exception e) {
+					// Ignored
+				}
 			} else {
 				deque.offerFirst(this);
 			}
@@ -48,13 +55,16 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	private int timeout;
 	private AtomicLong accessed = new AtomicLong(System.currentTimeMillis());
 
-	SupplierEx<T, E> supplier;
+	SupplierEx<? extends T, ? extends E> initializer;
+	ConsumerEx<? super T, ?> finalizer;
 	ConcurrentLinkedDeque<Entry> deque = new ConcurrentLinkedDeque<>();
 	AtomicInteger activeCount = new AtomicInteger(0);
 	volatile boolean closed = false;
 
-	public Pool(SupplierEx<T, E> supplier, int timeout) {
-		this.supplier = supplier;
+	public Pool(SupplierEx<? extends T, ? extends E> initializer,
+			ConsumerEx<? super T, ?> finalizer, int timeout) {
+		this.initializer = initializer;
+		this.finalizer = finalizer;
 		this.timeout = timeout;
 	}
 
@@ -70,7 +80,11 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 						deque.offerLast(entry);
 						break;
 					}
-					supplier.close(entry.object);
+					try {
+						finalizer.accept(entry.object);
+					} catch (Exception e) {
+						// Ignored
+					}
 				}
 			}
 		}
@@ -83,7 +97,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 			return entry;
 		}
 		entry = new Entry();
-		entry.object = supplier.get();
+		entry.object = initializer.get();
 		entry.created = entry.borrowed = now;
 		entry.borrows = 0;
 		entry.valid = false;
@@ -109,7 +123,11 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		Entry entry;
 		while ((entry = deque.pollFirst()) != null) {
 			activeCount.decrementAndGet();
-			supplier.close(entry.object);
+			try {
+				finalizer.accept(entry.object);
+			} catch (Exception e) {
+				// Ignored
+			}
 		}
 	}
 }

@@ -16,8 +16,9 @@ import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Log;
 import com.xqbase.util.Pool;
 import com.xqbase.util.Streams;
+import com.xqbase.util.function.ConsumerEx;
 
-class SingleRowException extends Exception {
+class MultiRowException extends Exception {
 	private static final long serialVersionUID = 1L;
 }
 
@@ -46,7 +47,7 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 	}
 
 	public ConnectionPool(Driver driver, String url, String user, String password) {
-		super(() -> driver.connect(url, getInfo(user, password)), 60000);
+		super(() -> driver.connect(url, getInfo(user, password)), Connection::close, 60000);
 	}
 
 	public int update(String sql, long... in) throws SQLException {
@@ -100,9 +101,9 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		return queryEx(sql, valueOf(in));
 	}
 
-	public <E extends Exception> void query(RowCallbackEx<E> callback,
+	public <E extends Exception> void query(ConsumerEx<Row, E> consumer,
 			String sql, long... in) throws E, SQLException {
-		queryEx(callback, sql, valueOf(in));
+		queryEx(consumer, sql, valueOf(in));
 	}
 
 	public Row queryEx(String sql, Object... in) throws SQLException {
@@ -110,13 +111,13 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		try {
 			queryEx(row -> {
 				row_[0] = row;
-				throw new SingleRowException();
+				throw new MultiRowException();
 			}, sql, in);
-		} catch (SingleRowException e) {/**/}
+		} catch (MultiRowException e) {/**/}
 		return row_[0];
 	}
 
-	public <E extends Exception> void queryEx(RowCallbackEx<E> callback,
+	public <E extends Exception> void queryEx(ConsumerEx<Row, E> consumer,
 			String sql, Object... in) throws E, SQLException {
 		try (Entry entry = borrow()) {
 			try (PreparedStatement ps = entry.getObject().prepareStatement(sql)) {
@@ -125,7 +126,7 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 				}
 				try (ResultSet rs = ps.executeQuery()) {
 					while (rs.next()) {
-						callback.onRow(new Row(rs));
+						consumer.accept(new Row(rs));
 					}
 				}
 			}

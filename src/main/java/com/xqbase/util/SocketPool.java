@@ -61,6 +61,6 @@ public class SocketPool extends Pool<Socket, IOException> {
 				socket.close();
 				throw e;
 			}
-		}, timeout);
+		}, Socket::close, timeout);
 	}
 }

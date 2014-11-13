@@ -18,7 +18,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
 import com.xqbase.util.Pool;
-import com.xqbase.util.SupplierEx;
 
 public class TransportPool extends Pool<Transport, MessagingException> {
 	public static boolean validate(String email) {
@@ -41,27 +40,16 @@ public class TransportPool extends Pool<Transport, MessagingException> {
 
 	public TransportPool(Session session, String protocol,
 			String user, String password, InternetAddress from) {
-		super(new SupplierEx<Transport, MessagingException>() {
-			@Override
-			public Transport get() throws MessagingException {
-				Transport transport = session.getTransport(protocol);
-				try {
-					transport.connect(user, password);
-					return transport;
-				} catch (MessagingException e) {
-					transport.close();
-					throw e;
-				}
+		super(() -> {
+			Transport transport = session.getTransport(protocol);
+			try {
+				transport.connect(user, password);
+				return transport;
+			} catch (MessagingException e) {
+				transport.close();
+				throw e;
 			}
-
-			/** {@link Transport} is not a {@link AutoCloseable} */
-			@Override
-			public void close(Transport transport) {
-				try {
-					transport.close();
-				} catch (MessagingException e) {/**/}
-			}
-		}, 60000);
+		}, Transport::close, 60000);
 		this.session = session;
 		this.from = from;
 	}
