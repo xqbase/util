@@ -65,32 +65,33 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 
 	public int updateEx(long[] insertId, String sql,
 			Object... in) throws SQLException {
-		try (Entry entry = borrow()) {
-			int numRows;
-			try (PreparedStatement ps = entry.getObject().prepareStatement(sql,
+		try (
+			Entry entry = borrow();
+			PreparedStatement ps = entry.getObject().prepareStatement(sql,
 					insertId == null ? Statement.NO_GENERATED_KEYS :
-					Statement.RETURN_GENERATED_KEYS)) {
-				for (int i = 0; i < in.length; i ++) {
-					ps.setObject(i + 1, in[i]);
-				}
-				try {
-					numRows = ps.executeUpdate();
-					if (insertId != null) {
-						try (ResultSet rs = ps.getGeneratedKeys()) {
-							int i = 0;
-							while (i < insertId.length && rs.next()) {
-								insertId[i] = rs.getLong(1);
-								i ++;
-							}
+					Statement.RETURN_GENERATED_KEYS);
+		) {
+			for (int i = 0; i < in.length; i ++) {
+				ps.setObject(i + 1, in[i]);
+			}
+			int numRows;
+			try {
+				numRows = ps.executeUpdate();
+				if (insertId != null) {
+					try (ResultSet rs = ps.getGeneratedKeys()) {
+						int i = 0;
+						while (i < insertId.length && rs.next()) {
+							insertId[i] = rs.getLong(1);
+							i ++;
 						}
 					}
-				} catch (SQLWarning e) {
-					Log.i(e.getMessage());
-					numRows = 0;
-				} catch (SQLIntegrityConstraintViolationException e) {
-					// Log.i(e.getMessage());
-					numRows = -1;
 				}
+			} catch (SQLWarning e) {
+				Log.i(e.getMessage());
+				numRows = 0;
+			} catch (SQLIntegrityConstraintViolationException e) {
+				// Log.i(e.getMessage());
+				numRows = -1;
 			}
 			entry.setValid(true);
 			return numRows;
@@ -119,16 +120,22 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 
 	public <E extends Exception> void queryEx(ConsumerEx<Row, E> consumer,
 			String sql, Object... in) throws E, SQLException {
-		try (Entry entry = borrow()) {
-			try (PreparedStatement ps = entry.getObject().prepareStatement(sql)) {
-				for (int i = 0; i < in.length; i ++) {
-					ps.setObject(i + 1, in[i]);
+		try (
+			Entry entry = borrow();
+			PreparedStatement ps = entry.getObject().prepareStatement(sql);
+		) {
+			for (int i = 0; i < in.length; i ++) {
+				ps.setObject(i + 1, in[i]);
+			}
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					consumer.accept(new Row(rs));
 				}
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						consumer.accept(new Row(rs));
-					}
-				}
+			} catch (RuntimeException | SQLException e) {
+				throw e;
+			} catch (Exception e) { // must be E
+				entry.setValid(true);
+				throw e;
 			}
 			entry.setValid(true);
 		}
