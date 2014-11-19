@@ -18,7 +18,7 @@ import com.xqbase.util.Pool;
 import com.xqbase.util.Streams;
 import com.xqbase.util.function.ConsumerEx;
 
-class MultiRowException extends Exception {
+class SingleRowException extends Exception {
 	private static final long serialVersionUID = 1L;
 }
 
@@ -112,9 +112,9 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		try {
 			queryEx(row -> {
 				row_[0] = row;
-				throw new MultiRowException();
+				throw new SingleRowException();
 			}, sql, in);
-		} catch (MultiRowException e) {/**/}
+		} catch (SingleRowException e) {/**/}
 		return row_[0];
 	}
 
