@@ -65,7 +65,8 @@ public class AuthFilter implements Filter {
 			}
 			chain.doFilter(request, response);
 		} else {
-			resp.setHeader("WWW-Authenticate", "Basic realm=\"" + realm + "\"");
+			resp.setHeader("WWW-Authenticate", realm == null ? "Basic" :
+					"Basic realm=\"" + realm + "\"");
 			resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 		}
 	}
