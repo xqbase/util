@@ -163,7 +163,7 @@ public class ByteArrayQueue implements Cloneable {
 				if (read(b, 0, 1) <= 0) {
 					return -1;
 				}
-				return b[0] & 0xff;
+				return b[0] & 0xFF;
 			}
 
 			@Override
