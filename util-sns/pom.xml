@@ -3,11 +3,11 @@
 		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.xqbase</groupId>
-	<artifactId>xqbase-util-parent</artifactId>
+	<artifactId>xqbase-util-sns</artifactId>
 	<version>0.2.2</version>
-	<packaging>pom</packaging>
-	<name>XQBase Util Parent</name>
-	<description>Reusable Java components for www.xqbase.com</description>
+	<packaging>jar</packaging>
+	<name>XQBase Util SNS</name>
+	<description>Reusable Java components for www.xqbase.com, SNS Part</description>
 	<url>https://github.com/xqbase/util</url>
 
 	<licenses>
@@ -27,18 +27,27 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git@github.com:xqbase/net.git</connection>
-		<developerConnection>scm:git:git@github.com:xqbase/net.git</developerConnection>
-		<url>https://github.com/xqbase/net.git</url>
+		<connection>scm:git:git@github.com:xqbase/util.git</connection>
+		<developerConnection>scm:git:git@github.com:xqbase/util.git</developerConnection>
+		<url>https://github.com/xqbase/util.git</url>
 	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
-	<modules>
-		<module>util</module>
-		<module>util-sns</module>
-		<module>util-mail</module>
-	</modules>
+	<dependencies>
+		<dependency>
+			<groupId>com.xqbase</groupId>
+			<artifactId>xqbase-util</artifactId>
+			<version>0.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20141113</version>
+		</dependency>
+	</dependencies>
 </project>
