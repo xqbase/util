@@ -8,7 +8,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -20,13 +23,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import sun.security.pkcs.ContentInfo;
-import sun.security.pkcs.PKCS7;
-import sun.security.pkcs.SignerInfo;
-import sun.security.x509.AlgorithmId;
-
-import com.xqbase.util.ByteArrayQueue;
-import com.xqbase.util.Bytes;
 import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
@@ -187,13 +183,10 @@ public class ProxyPassServlet extends HttpServlet {
 			writeHeader(outSocket, "X-Forwarded-Proto", req.getScheme());
 			Object certs = req.getAttribute("javax.servlet.request.X509Certificate");
 			if (certs instanceof X509Certificate[]) {
-				ByteArrayQueue baq = new ByteArrayQueue();
-				new PKCS7(new AlgorithmId[0], new ContentInfo(Bytes.EMPTY_BYTES),
-						(X509Certificate[]) certs, new SignerInfo[0]).
-						encodeSignedData(baq.getOutputStream());
 				writeHeader(outSocket, "X-Pkcs7-Certificates-Base64",
-						Base64.getEncoder().encodeToString(Bytes.
-						sub(baq.array(), baq.offset(), baq.length())));
+						Base64.getEncoder().encodeToString(CertificateFactory.
+						getInstance("X509").generateCertPath(Arrays.
+						asList((X509Certificate[]) certs)).getEncoded("PKCS7")));
 			}
 			writeHeader(outSocket, "Connection", "Keep-Alive");
 
@@ -356,17 +349,18 @@ public class ProxyPassServlet extends HttpServlet {
 			}
 			socketEntry.setValid(!close);
 
-		} catch (IOException e) {
-			if (e != CLIENT_EXCEPTION) {
-				try {
-					if (redirect == null) {
-						resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
-					} else {
-						resp.sendRedirect(redirect);
-					}
-				} catch (IOException e_) {/**/}
-				Log.w(e.getMessage());
+		} catch (IOException | GeneralSecurityException e) {
+			if (e == CLIENT_EXCEPTION) {
+				return;
 			}
+			try {
+				if (redirect == null) {
+					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
+				} else {
+					resp.sendRedirect(redirect);
+				}
+			} catch (IOException e_) {/**/}
+			Log.w(e.getMessage());
 		}
 	}
 }

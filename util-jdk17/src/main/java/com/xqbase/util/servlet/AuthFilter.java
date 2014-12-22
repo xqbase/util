@@ -12,8 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import sun.misc.BASE64Encoder;
-
+import com.xqbase.util.Base64;
 import com.xqbase.util.Conf;
 
 public class AuthFilter implements Filter {
@@ -24,7 +23,7 @@ public class AuthFilter implements Filter {
 	public void init(FilterConfig config) {
 		auth = config.getInitParameter("auth");
 		if (auth != null) {
-			auth = new BASE64Encoder().encode(auth.getBytes());
+			auth = Base64.encode(auth.getBytes());
 		}
 		realm = config.getInitParameter("realm");
 		useSession = Conf.getBoolean(config.getInitParameter("session"), false);

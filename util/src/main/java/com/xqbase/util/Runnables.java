@@ -52,8 +52,7 @@ public class Runnables {
 		};
 	}
 
-	public static void shutdown(ExecutorService service) {
-		service.shutdown();
+	private static void awaitTermination(ExecutorService service) {
 		boolean interrupted = Thread.interrupted();
 		boolean terminated = false;
 		while (!terminated) {
@@ -66,5 +65,15 @@ public class Runnables {
 		if (interrupted) {
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	public static void shutdown(ExecutorService service) {
+		service.shutdown();
+		awaitTermination(service);
+	}
+
+	public static void shutdownNow(ExecutorService service) {
+		service.shutdownNow();
+		awaitTermination(service);
 	}
 }

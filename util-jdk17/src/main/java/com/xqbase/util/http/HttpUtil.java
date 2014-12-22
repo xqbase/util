@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import sun.misc.BASE64Encoder;
-
+import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
@@ -61,7 +60,7 @@ class HttpParam {
 				proxyAuth = null;
 			} else {
 				String password = httpProxy.getPassword();
-				proxyAuth = "Basic " + new BASE64Encoder().encode((username + ":" +
+				proxyAuth = "Basic " + Base64.encode((username + ":" +
 						(password == null ? "" : password)).getBytes());
 			}
 		}
