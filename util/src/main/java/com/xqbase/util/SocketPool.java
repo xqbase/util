@@ -13,12 +13,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class SocketPool extends Pool<Socket, IOException> {
 	public static Socket createSocket(boolean secure) throws IOException {
-		if (secure) {
-			return sslsf.createSocket();
-		}
-		return new Socket();
-		// Resource leak?
-		// return secure ? sslsf.createSocket() : new Socket();
+		return secure ? sslsf.createSocket() : new Socket();
 	}
 
 	private static SSLSocketFactory sslsf;
