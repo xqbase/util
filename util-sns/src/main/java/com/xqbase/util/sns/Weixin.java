@@ -1,27 +1,30 @@
 package com.xqbase.util.sns;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicLong;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Conf;
 import com.xqbase.util.Log;
-import com.xqbase.util.Time;
 import com.xqbase.util.http.HttpPool;
 
 public class Weixin {
-	private static final String WEIXIN_API_URL = "https://api.weixin.qq.com/cgi-bin/";
+	public static class UserInfo {
+		public String openid, nickname, sex, province, city, country, headimgurl, unionid;
+		public HashSet<String> privilege = new HashSet<>(); 
+	}
 
-	private static HttpPool weixinPool = new HttpPool(WEIXIN_API_URL, 15000);
-	private static AtomicLong accessed = new AtomicLong(0);
+	private static final String WEIXIN_API_URL = "https://api.weixin.qq.com/sns/";
 
+	private static HttpPool httpPool = new HttpPool(WEIXIN_API_URL, 15000);
 	private static String appId, appSecret;
-	private static volatile String accessToken;
 
 	static {
 		Properties p = Conf.load("Weixin");
@@ -29,49 +32,70 @@ public class Weixin {
 		appSecret = p.getProperty("app_secret");
 	}
 
-	private static String getAccessToken() {
-		long now = System.currentTimeMillis();
-		long accessed_ = accessed.get();
-		if (now < accessed_ + Time.HOUR ||
-				!accessed.compareAndSet(accessed_, now)) {
-			return accessToken;
-		}
+	public static HttpPool getHttpPool() {
+		return httpPool;
+	}
 
-		ByteArrayQueue body = new ByteArrayQueue();
+	public static String getLoginUrl(String redirectUri) {
 		try {
-			int status = weixinPool.get("token?grant_type=client_credential&appid=" +
-					appId + "&secret=" + appSecret, null, body, null);
-			if (status >= 400) {
-				Log.w(body.toString());
-				return null;
-			}
-			JSONObject jo = new JSONObject(body.toString());
-			accessToken = jo.optString("access_token");
-			return accessToken;
-		} catch (IOException | JSONException e) {
-			Log.e(e);
-			return null;
+			return "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + appId +
+					"&redirect_uri=" + URLEncoder.encode(redirectUri, "UTF-8") +
+					"&response_type=code&scope=snsapi_login#wechat_redirect";
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	@Deprecated
-	public static String getUserInfo(String openId) {
+	public static UserInfo getUserInfo(String code) {
 		ByteArrayQueue body = new ByteArrayQueue();
+		JSONObject jo;
 		try {
-			int status = weixinPool.get("user/info?access_token=" + getAccessToken() +
-					"&openid=" + openId + "&lang=zh_CN", null, body, null);
+			int status = httpPool.get("oauth2/access_token?appid=" +
+					appId + "&secret=" + appSecret + "&code=" + code +
+					"&grant_type=authorization_code", null, body, null);
 			if (status >= 400) {
 				Log.w(body.toString());
 				return null;
 			}
-			return body.toString(StandardCharsets.UTF_8);
+			jo = new JSONObject(body.toString());
+			String accessToken = jo.optString("access_token");
+			String openid = jo.optString("openid");
+			if (accessToken == null || openid == null) {
+				Log.w(body.toString());
+				return null;
+			}
+			status = httpPool.get("userinfo?access_token=" + accessToken +
+					"&openid=" + openid, null, body, null);
+			if (status >= 400) {
+				Log.w(body.toString());
+				return null;
+			}
+			jo = new JSONObject(body.toString(StandardCharsets.UTF_8));
 		} catch (IOException | JSONException e) {
 			Log.e(e);
 			return null;
 		}
+		UserInfo ui = new UserInfo();
+		ui.openid = jo.optString("openid");
+		ui.nickname = jo.optString("nickname");
+		ui.sex = jo.optString("sex");
+		ui.province = jo.optString("province");
+		ui.city = jo.optString("city");
+		ui.country = jo.optString("country");
+		ui.headimgurl = jo.optString("headimgurl");
+		ui.unionid = jo.optString("unionid");
+		JSONArray ja = jo.optJSONArray("privilege");
+		if (ja == null) {
+			return ui;
+		}
+		int length = ja.length();
+		for (int i = 0; i < length; i ++) {
+			ui.privilege.add(ja.optString(i));
+		}
+		return ui;
 	}
 
 	public static void shutdown() {
-		weixinPool.close();
+		httpPool.close();
 	}
 }
