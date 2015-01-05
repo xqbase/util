@@ -26,7 +26,7 @@ public class Weixin {
 	private static HttpPool httpPool = new HttpPool(WEIXIN_API_URL, 15000);
 	private static String appId, appSecret;
 
-	private static volatile String accessToken;
+	private static volatile String accessToken = null;
 	private static volatile long expire = 0;
 
 	static {
@@ -62,9 +62,13 @@ public class Weixin {
 			}
 			Log.i(body.toString());
 			jo = new JSONObject(body.toString());
-			accessToken = jo.optString("access_token");
+			String accessToken_ = jo.optString("access_token", null);
+			if (accessToken_ == null) {
+				return null;
+			}
+			accessToken = accessToken_;
 			expire = System.currentTimeMillis() + jo.optInt("expires_in") * 1000;
-			return jo.optString("openid");
+			return jo.optString("openid", null);
 		} catch (IOException | JSONException e) {
 			Log.e(e);
 			return null;
@@ -91,14 +95,14 @@ public class Weixin {
 			return null;
 		}
 		UserInfo ui = new UserInfo();
-		ui.openid = jo.optString("openid");
-		ui.nickname = jo.optString("nickname");
-		ui.sex = jo.optString("sex");
-		ui.province = jo.optString("province");
-		ui.city = jo.optString("city");
-		ui.country = jo.optString("country");
-		ui.headimgurl = jo.optString("headimgurl");
-		ui.unionid = jo.optString("unionid");
+		ui.openid = jo.optString("openid", null);
+		ui.nickname = jo.optString("nickname", null);
+		ui.sex = jo.optString("sex", null);
+		ui.province = jo.optString("province", null);
+		ui.city = jo.optString("city", null);
+		ui.country = jo.optString("country", null);
+		ui.headimgurl = jo.optString("headimgurl", null);
+		ui.unionid = jo.optString("unionid", null);
 		JSONArray ja = jo.optJSONArray("privilege");
 		if (ja == null) {
 			return ui;
