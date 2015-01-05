@@ -26,6 +26,9 @@ public class Weixin {
 	private static HttpPool httpPool = new HttpPool(WEIXIN_API_URL, 15000);
 	private static String appId, appSecret;
 
+	private static volatile String accessToken;
+	private static volatile long expire = 0;
+
 	static {
 		Properties p = Conf.load("Weixin");
 		appId = p.getProperty("app_id");
@@ -46,7 +49,7 @@ public class Weixin {
 		}
 	}
 
-	public static UserInfo getUserInfo(String code) {
+	public static String getOpenid(String code) {
 		ByteArrayQueue body = new ByteArrayQueue();
 		JSONObject jo;
 		try {
@@ -57,19 +60,31 @@ public class Weixin {
 				Log.w(body.toString());
 				return null;
 			}
+			Log.i(body.toString());
 			jo = new JSONObject(body.toString());
-			String accessToken = jo.optString("access_token");
-			String openid = jo.optString("openid");
-			if (accessToken == null || openid == null) {
-				Log.w(body.toString());
-				return null;
-			}
-			status = httpPool.get("userinfo?access_token=" + accessToken +
-					"&openid=" + openid, null, body, null);
+			accessToken = jo.optString("access_token");
+			expire = System.currentTimeMillis() + jo.optInt("expires_in") * 1000;
+			return jo.optString("openid");
+		} catch (IOException | JSONException e) {
+			Log.e(e);
+			return null;
+		}
+	}
+
+	public static UserInfo getUserInfo(String openid) {
+		if (System.currentTimeMillis() > expire) {
+			return null;
+		}
+		ByteArrayQueue body = new ByteArrayQueue();
+		JSONObject jo;
+		try {
+			int status = httpPool.get("userinfo?access_token=" +
+					accessToken + "&openid=" + openid, null, body, null);
 			if (status >= 400) {
 				Log.w(body.toString());
 				return null;
 			}
+			Log.i(body.toString());
 			jo = new JSONObject(body.toString(StandardCharsets.UTF_8));
 		} catch (IOException | JSONException e) {
 			Log.e(e);
