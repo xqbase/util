@@ -26,9 +26,6 @@ public class Weixin {
 	private static HttpPool httpPool = new HttpPool(WEIXIN_API_URL, 15000);
 	private static String appId, appSecret;
 
-	private static volatile String accessToken = null;
-	private static volatile long expire = 0;
-
 	static {
 		Properties p = Conf.load("Weixin");
 		appId = p.getProperty("app_id");
@@ -49,10 +46,10 @@ public class Weixin {
 		}
 	}
 
-	public static String getOpenid(String code) {
-		ByteArrayQueue body = new ByteArrayQueue();
+	public static UserInfo getUserInfo(String code) {
 		JSONObject jo;
 		try {
+			ByteArrayQueue body = new ByteArrayQueue();
 			int status = httpPool.get("oauth2/access_token?appid=" +
 					appId + "&secret=" + appSecret + "&code=" + code +
 					"&grant_type=authorization_code", null, body, null);
@@ -60,35 +57,20 @@ public class Weixin {
 				Log.w(body.toString());
 				return null;
 			}
-			Log.i(body.toString());
 			jo = new JSONObject(body.toString());
-			String accessToken_ = jo.optString("access_token", null);
-			if (accessToken_ == null) {
+			String accessToken = jo.optString("access_token", null);
+			String openid = jo.optString("openid", null);
+			if (accessToken == null) {
 				return null;
 			}
-			accessToken = accessToken_;
-			expire = System.currentTimeMillis() + jo.optInt("expires_in") * 1000;
-			return jo.optString("openid", null);
-		} catch (IOException | JSONException e) {
-			Log.e(e);
-			return null;
-		}
-	}
 
-	public static UserInfo getUserInfo(String openid) {
-		if (System.currentTimeMillis() > expire) {
-			return null;
-		}
-		ByteArrayQueue body = new ByteArrayQueue();
-		JSONObject jo;
-		try {
-			int status = httpPool.get("userinfo?access_token=" +
+			body.clear();
+			status = httpPool.get("userinfo?access_token=" +
 					accessToken + "&openid=" + openid, null, body, null);
 			if (status >= 400) {
 				Log.w(body.toString());
 				return null;
 			}
-			Log.i(body.toString());
 			jo = new JSONObject(body.toString(StandardCharsets.UTF_8));
 		} catch (IOException | JSONException e) {
 			Log.e(e);
@@ -96,6 +78,9 @@ public class Weixin {
 		}
 		UserInfo ui = new UserInfo();
 		ui.openid = jo.optString("openid", null);
+		if (ui.openid == null) {
+			return null;
+		}
 		ui.nickname = jo.optString("nickname", null);
 		ui.sex = jo.optString("sex", null);
 		ui.province = jo.optString("province", null);
