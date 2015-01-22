@@ -99,7 +99,7 @@ public class Pipeline {
 					new boolean[1] : connectionClose;
 			Response response = new Response(request.getId());
 			response.setStatus(HttpUtil.recv(in, response.getBody(),
-					response.getHeaders(), request.isHead(), connectionClose_));
+					response.getHeaders(), request.isHead(), false, connectionClose_));
 			responses.add(response);
 			if (connectionClose_[0]) {
 				return;

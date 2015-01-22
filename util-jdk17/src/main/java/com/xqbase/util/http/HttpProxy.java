@@ -1,5 +1,12 @@
 package com.xqbase.util.http;
 
+import java.io.IOException;
+import java.net.Socket;
+
+import com.xqbase.util.Base64;
+import com.xqbase.util.SocketPool;
+import com.xqbase.util.function.SupplierEx;
+
 public class HttpProxy {
 	private String host, username, password;
 	private int port;
@@ -23,11 +30,21 @@ public class HttpProxy {
 		return port;
 	}
 
-	public String getUsername() {
-		return username;
+	public String getProxyAuth() {
+		return username == null ? null :
+				"Basic " + Base64.encode((username + ":" +
+				(password == null ? "" : password)).getBytes());
 	}
 
-	public String getPassword() {
-		return password;
+	public SocketPool createSocketPool(final String remoteHost,
+			final int remotePort, final boolean secure, final int timeout) {
+		return new SocketPool(new SupplierEx<Socket, IOException>() {
+			@Override
+			public Socket get() throws IOException {
+				return HttpUtil.connect(SocketPool.
+						createSocket(getHost(), getPort(), false, timeout),
+						remoteHost, remotePort, getProxyAuth(), secure);
+			}
+		}, timeout);
 	}
 }

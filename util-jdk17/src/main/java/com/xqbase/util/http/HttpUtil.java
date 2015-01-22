@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
@@ -46,21 +45,14 @@ class HttpParam {
 			proxyAuth = null;
 			return;
 		}
+		socketHost = httpProxy.getHost();
+		socketPort = httpProxy.getPort();
 		if (secure) {
 			connect = true;
 		} else {
 			path = "http://" + host + path;
 		}
-		socketHost = httpProxy.getHost();
-		socketPort = httpProxy.getPort();
-		String username = httpProxy.getUsername();
-		if (username == null) {
-			proxyAuth = null;
-		} else {
-			String password = httpProxy.getPassword();
-			proxyAuth = "Basic " + Base64.encode((username + ":" +
-					(password == null ? "" : password)).getBytes());
-		}
+		proxyAuth = httpProxy.getProxyAuth();
 	}
 }
 
@@ -144,9 +136,9 @@ public class HttpUtil {
 
 	static int recv(InputStream in, ByteArrayQueue responseBody,
 			Map<String, List<String>> responseHeaders, boolean head,
-			boolean[] connectionClose) throws IOException {
+			boolean connect, boolean[] connectionClose) throws IOException {
 		// Response Header
-		boolean gzip = false, close = false;
+		boolean http10 = false, close = false, gzip = false;
 		int status = 0, contentLength = 0;
 		StringBuilder sb = new StringBuilder();
 		while (true) {
@@ -174,7 +166,10 @@ public class HttpUtil {
 					throw new IOException("Response Error: [" + sb + "]");
 				}
 				status = Numbers.parseInt(ss[1]);
-			} else if (status != 100) {
+				if (ss[0].toUpperCase().equals("HTTP/1.0")) {
+					http10 = true;
+				}
+			} else if (status >= 200) {
 				int index = sb.indexOf(": ");
 				if (index >= 0) {
 					String key = sb.substring(0, index).toUpperCase();
@@ -209,10 +204,17 @@ public class HttpUtil {
 			sb.setLength(0);
 		}
 		if (connectionClose != null && connectionClose.length > 0) {
-			connectionClose[0] = close;
+			connectionClose[0] = http10 || close;
 		}
 
 		// Response Body
+		if (http10 && !connect) {
+			OutputStream out = responseBody == null ? new ByteArrayQueue().getOutputStream() :
+					responseBody.getOutputStream();
+			// For HTTP/1.0 response, read from stream until connection lost
+			Streams.copy(gzip ? new GZIPInputStream(in) : in, out);
+			return status;
+		}
 		if (head || contentLength == 0) {
 			return status;
 		}
@@ -284,7 +286,7 @@ public class HttpUtil {
 		send(socket.getOutputStream(), path, host,
 				proxyAuth, requestBody, requestHeaders, head);
 		return recv(socket.getInputStream(), responseBody,
-				responseHeaders, head, connectionClose);
+				responseHeaders, head, false, connectionClose);
 	}
 
 	static Socket connect(Socket socket, String host,
@@ -299,16 +301,24 @@ public class HttpUtil {
 			host_ = host.substring(0, colon);
 			port = Numbers.parseInt(host.substring(colon + 1));
 		}
+		return connect(socket, host_, port, proxyAuth, secure);
+	}
+
+	static Socket connect(Socket socket, String host, int port,
+			String proxyAuth, boolean secure) throws IOException {
 		ByteArrayQueue headerBaq = new ByteArrayQueue();
-		headerBaq.add(CONNECT).add(host_.getBytes()).add(COLON, 0, 1).
+		headerBaq.add(CONNECT).add(host.getBytes()).add(COLON, 0, 1).
 				add(("" + port).getBytes()).add(HTTP10);
 		if (proxyAuth != null) {
 			headerBaq.add(PROXY_AUTH).add(proxyAuth.getBytes()).add(CRLF);
 		}
 		headerBaq.add(CRLF);
 		Streams.copy(headerBaq.getInputStream(), socket.getOutputStream());
-		recv(socket.getInputStream(), null, null, false, null);
-		return secure ? SocketPool.createSocket(socket, host_, port) : socket;
+		int status = recv(socket.getInputStream(), null, null, false, true, null);
+		if (status != 200) {
+			throw new IOException("HTTP/1.0 " + status + " Connection NOT established");
+		}
+		return secure ? SocketPool.createSocket(socket, host, port) : socket;
 	}
 
 	private static int request(HttpProxy httpProxy, String url,

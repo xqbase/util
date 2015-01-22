@@ -62,7 +62,7 @@ public class SocketPool extends Pool<Socket, IOException> {
 		}
 	}
 
-	protected SocketPool(SupplierEx<Socket, IOException> supplier, int timeout) {
+	public SocketPool(SupplierEx<Socket, IOException> supplier, int timeout) {
 		super(supplier, new ConsumerEx<Socket, IOException>() {
 			@Override
 			public void accept(Socket socket) throws IOException {
