@@ -36,14 +36,19 @@ public class HttpProxy {
 				(password == null ? "" : password)).getBytes());
 	}
 
+	public Socket createSocket(String remoteHost,
+			int remotePort, boolean secure, int timeout) throws IOException {
+		return HttpUtil.connect(SocketPool.
+				createSocket(getHost(), getPort(), false, timeout),
+				remoteHost, remotePort, getProxyAuth(), secure);
+	}
+
 	public SocketPool createSocketPool(final String remoteHost,
 			final int remotePort, final boolean secure, final int timeout) {
 		return new SocketPool(new SupplierEx<Socket, IOException>() {
 			@Override
 			public Socket get() throws IOException {
-				return HttpUtil.connect(SocketPool.
-						createSocket(getHost(), getPort(), false, timeout),
-						remoteHost, remotePort, getProxyAuth(), secure);
+				return createSocket(remoteHost, remotePort, secure, timeout);
 			}
 		}, timeout);
 	}

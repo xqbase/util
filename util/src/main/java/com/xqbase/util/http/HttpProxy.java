@@ -1,5 +1,7 @@
 package com.xqbase.util.http;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Base64;
 
 import com.xqbase.util.SocketPool;
@@ -33,10 +35,16 @@ public class HttpProxy {
 				(password == null ? "" : password)).getBytes());
 	}
 
+	public Socket createSocket(String remoteHost,
+			int remotePort, boolean secure, int timeout) throws IOException {
+		return HttpUtil.connect(SocketPool.
+				createSocket(getHost(), getPort(), false, timeout),
+				remoteHost, remotePort, getProxyAuth(), secure);
+	}
+
 	public SocketPool createSocketPool(String remoteHost,
 			int remotePort, boolean secure, int timeout) {
-		return new SocketPool(() -> HttpUtil.connect(SocketPool.
-				createSocket(getHost(), getPort(), false, timeout),
-				remoteHost, remotePort, getProxyAuth(), secure), timeout);
+		return new SocketPool(() -> createSocket(remoteHost,
+				remotePort, secure, timeout), timeout);
 	}
 }
