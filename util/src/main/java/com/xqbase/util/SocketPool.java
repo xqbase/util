@@ -11,9 +11,29 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
+import com.xqbase.util.function.SupplierEx;
+
 public class SocketPool extends Pool<Socket, IOException> {
 	public static Socket createSocket(boolean secure) throws IOException {
 		return secure ? sslsf.createSocket() : new Socket();
+	}
+
+	public static Socket createSocket(String host, int port,
+			boolean secure, int timeout) throws IOException {
+		Socket socket = createSocket(secure);
+		try {
+			socket.connect(new InetSocketAddress(host, port), timeout);
+			socket.setSoTimeout(timeout);
+			return socket;
+		} catch (IOException e) {
+			socket.close();
+			throw e;
+		}
+	}
+
+	public static Socket createSocket(Socket socket,
+			String host, int port) throws IOException {
+		return sslsf.createSocket(socket, host, port, true);
 	}
 
 	private static SSLSocketFactory sslsf;
@@ -41,21 +61,15 @@ public class SocketPool extends Pool<Socket, IOException> {
 		}
 	}
 
+	protected SocketPool(SupplierEx<Socket, IOException> supplier, int timeout) {
+		super(supplier, Socket::close, timeout);
+	}
+
 	public SocketPool(String host, int port, int timeout) {
 		this(host, port, false, timeout);
 	}
 
 	public SocketPool(String host, int port, boolean secure, int timeout) {
-		super(() -> {
-			Socket socket = createSocket(secure);
-			try {
-				socket.connect(new InetSocketAddress(host, port), timeout);
-				socket.setSoTimeout(timeout);
-				return socket;
-			} catch (IOException e) {
-				socket.close();
-				throw e;
-			}
-		}, Socket::close, timeout);
+		this(() -> createSocket(host, port, secure, timeout), timeout);
 	}
 }

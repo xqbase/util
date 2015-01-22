@@ -1,17 +1,32 @@
 package com.xqbase.util.http;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.SocketPool;
+import com.xqbase.util.function.SupplierEx;
 
 public class HttpPool extends SocketPool {
 	private String path_, host, proxyAuth;
 
+	private static SupplierEx<Socket, IOException>
+			getSocketSupplier(final HttpParam param, final int timeout) {
+		return new SupplierEx<Socket, IOException>() {
+			@Override
+			public Socket get() throws IOException {
+				Socket socket = SocketPool.createSocket(param.socketHost,
+						param.socketPort, param.connect ? false : param.secure, timeout);
+				return param.connect ? HttpUtil.connect(socket,
+						param.host, param.proxyAuth, param.secure) : socket;
+			}
+		};
+	}
+
 	private HttpPool(HttpParam param, int timeout) {
-		super(param.socketHost, param.socketPort, param.secure, timeout);
+		super(getSocketSupplier(param, timeout), timeout);
 		path_ = param.path;
 		host = param.host;
 		proxyAuth = param.proxyAuth;

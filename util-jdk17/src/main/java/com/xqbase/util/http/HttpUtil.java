@@ -22,47 +22,44 @@ import com.xqbase.util.Streams;
 class HttpParam {
 	String socketHost, path, host, proxyAuth;
 	int socketPort;
-	boolean secure;
+	boolean secure, connect;
 
 	HttpParam(HttpProxy httpProxy, String url) {
+		try {
+			URL url_ = new URL(url);
+			int port = url_.getPort();
+			String query = url_.getQuery();
+			secure = url_.getProtocol().equals("https");
+			socketHost = url_.getHost();
+			socketPort = port == -1 ? url_.getDefaultPort() : port;
+			path = url_.getPath() + (query == null ? "" : "?" + query);
+			host = url_.getHost() + (port == -1 ? "" : ":" + port);
+		} catch (IOException e) {
+			secure = false;
+			socketHost = "localhost";
+			socketPort = 80;
+			path = "/";
+			host = "localhost";
+		}
+		connect = false;
 		if (httpProxy == null) {
-			try {
-				URL url_ = new URL(url);
-				int port = url_.getPort();
-				String query = url_.getQuery();
-				secure = url_.getProtocol().equals("https");
-				socketHost = url_.getHost();
-				socketPort = port == -1 ? url_.getDefaultPort() : port;
-				path = url_.getPath() + (query == null ? "" : "?" + query);
-				host = url_.getHost() + (port == -1 ? "" : ":" + port);
-			} catch (IOException e) {
-				secure = false;
-				socketHost = "localhost";
-				socketPort = 80;
-				path = "/";
-				host = "localhost";
-			}
+			proxyAuth = null;
+			return;
+		}
+		if (secure) {
+			connect = true;
+		} else {
+			path = "http://" + host + path;
+		}
+		socketHost = httpProxy.getHost();
+		socketPort = httpProxy.getPort();
+		String username = httpProxy.getUsername();
+		if (username == null) {
 			proxyAuth = null;
 		} else {
-			secure = false;
-			socketHost = httpProxy.getHost();
-			socketPort = httpProxy.getPort();
-			path = url;
-			try {
-				URL url_ = new URL(url);
-				int port = url_.getPort();
-				host = url_.getHost() + (port == -1 ? "" : ":" + port);
-			} catch (IOException e) {
-				host = "localhost";
-			}
-			String username = httpProxy.getUsername();
-			if (username == null) {
-				proxyAuth = null;
-			} else {
-				String password = httpProxy.getPassword();
-				proxyAuth = "Basic " + Base64.encode((username + ":" +
-						(password == null ? "" : password)).getBytes());
-			}
+			String password = httpProxy.getPassword();
+			proxyAuth = "Basic " + Base64.encode((username + ":" +
+					(password == null ? "" : password)).getBytes());
 		}
 	}
 }
@@ -95,7 +92,9 @@ public class HttpUtil {
 	private static final byte[] GET = "GET ".getBytes();
 	private static final byte[] HEAD = "HEAD ".getBytes();
 	private static final byte[] POST = "POST ".getBytes();
+	private static final byte[] CONNECT = "CONNECT ".getBytes();
 	private static final byte[] HTTP11 = " HTTP/1.1\r\n".getBytes();
+	private static final byte[] HTTP10 = " HTTP/1.0\r\n".getBytes();
 	private static final byte[] HOST = "Host: ".getBytes();
 	private static final byte[] PROXY_AUTH = "Proxy-Authorization: ".getBytes();
 	private static final byte[] CONTENT_LENGTH = "Content-Length: ".getBytes();
@@ -288,11 +287,43 @@ public class HttpUtil {
 				responseHeaders, head, connectionClose);
 	}
 
+	static Socket connect(Socket socket, String host,
+			String proxyAuth, boolean secure) throws IOException {
+		int colon = host.indexOf(':');
+		int port;
+		String host_;
+		if (colon < 0) {
+			host_ = host;
+			port = secure ? 443 : 80;
+		} else {
+			host_ = host.substring(0, colon);
+			port = Numbers.parseInt(host.substring(colon + 1));
+		}
+		ByteArrayQueue headerBaq = new ByteArrayQueue();
+		headerBaq.add(CONNECT).add(host_.getBytes()).add(COLON, 0, 1).
+				add(("" + port).getBytes()).add(HTTP10);
+		if (proxyAuth != null) {
+			headerBaq.add(PROXY_AUTH).add(proxyAuth.getBytes()).add(CRLF);
+		}
+		headerBaq.add(CRLF);
+		Streams.copy(headerBaq.getInputStream(), socket.getOutputStream());
+		recv(socket.getInputStream(), null, null, false, null);
+		return secure ? SocketPool.createSocket(socket, host_, port) : socket;
+	}
+
 	private static int request(HttpProxy httpProxy, String url,
 			ByteArrayQueue requestBody, Map<String, List<String>> requestHeaders, boolean head,
 			ByteArrayQueue responseBody, Map<String, List<String>> responseHeaders,
 			int timeout) throws IOException {
 		HttpParam param = new HttpParam(httpProxy, url);
+		if (param.connect) {
+			try (Socket socket = connect(SocketPool.createSocket(param.socketHost,
+					param.socketPort, param.secure, timeout),
+					param.host, param.proxyAuth, param.secure)) {
+				return request(socket, param.path, param.host, null, requestBody,
+						requestHeaders, head, responseBody, responseHeaders, null);			
+			}
+		}
 		try (Socket socket = SocketPool.createSocket(param.secure)) {
 			socket.connect(new InetSocketAddress(param.socketHost, param.socketPort), timeout);
 			socket.setSoTimeout(timeout);
