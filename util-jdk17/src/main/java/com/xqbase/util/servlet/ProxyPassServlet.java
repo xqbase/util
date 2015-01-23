@@ -26,6 +26,7 @@ import com.xqbase.util.Base64;
 import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
+import com.xqbase.util.Streams;
 
 public class ProxyPassServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -241,7 +242,7 @@ public class ProxyPassServlet extends HttpServlet {
 			// Response Head
 			BufferedInputStream inSocket = new
 					BufferedInputStream(socket.getInputStream());
-			boolean close = false;
+			boolean http10 = false, close = false;
 			int status = 0;
 			StringBuilder sb = new StringBuilder();
 			contentLength = 0;
@@ -271,6 +272,9 @@ public class ProxyPassServlet extends HttpServlet {
 						throw new IOException("Response Error: [" + sb + "]");
 					}
 					status = Numbers.parseInt(ss[1]);
+					if (ss[0].toUpperCase().equals("HTTP/1.0")) {
+						http10 = true;
+					}
 				} else if (status != HttpServletResponse.SC_CONTINUE) {
 					int index = sb.indexOf(": ");
 					if (index >= 0) {
@@ -301,12 +305,18 @@ public class ProxyPassServlet extends HttpServlet {
 			}
 
 			// Response Body
+			OutputStream outResp = resp.getOutputStream();
+			if (http10) {
+				// For HTTP/1.0 response, read from stream until connection lost
+				Streams.copy(inSocket, outResp);
+				socketEntry.setValid(false);
+				return;
+			}
 			if (contentLength == 0 || method.equals("HEAD")) {
 				resp.setContentLength(contentLength);
 				socketEntry.setValid(!close);
 				return;
 			}
-			OutputStream outResp = resp.getOutputStream();
 			byte[] buffer = new byte[RESP_MAX_SIZE];
 			if (contentLength > 0) {
 				resp.setContentLength(contentLength);
@@ -350,16 +360,17 @@ public class ProxyPassServlet extends HttpServlet {
 			socketEntry.setValid(!close);
 
 		} catch (IOException | GeneralSecurityException e) {
-			if (e != CLIENT_EXCEPTION) {
-				try {
-					if (redirect == null) {
-						resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
-					} else {
-						resp.sendRedirect(redirect);
-					}
-				} catch (IOException e_) {/**/}
-				Log.w(e.getMessage());
+			if (e == CLIENT_EXCEPTION) {
+				return;
 			}
+			try {
+				if (redirect == null) {
+					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
+				} else {
+					resp.sendRedirect(redirect);
+				}
+			} catch (IOException e_) {/**/}
+			Log.w(e.getMessage());
 		}
 	}
 }
