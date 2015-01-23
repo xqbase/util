@@ -37,8 +37,7 @@ public class HttpProxy {
 
 	public Socket createSocket(String remoteHost,
 			int remotePort, boolean secure, int timeout) throws IOException {
-		return HttpUtil.connect(SocketPool.
-				createSocket(getHost(), getPort(), false, timeout),
+		return HttpUtil.connect(SocketPool.createSocket(host, port, false, timeout),
 				remoteHost, remotePort, getProxyAuth(), secure);
 	}
 
