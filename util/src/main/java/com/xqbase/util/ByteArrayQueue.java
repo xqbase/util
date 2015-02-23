@@ -13,17 +13,20 @@ public class ByteArrayQueue implements Cloneable {
 	private byte[] array;
 	private int offset = 0;
 	private int length = 0;
+	private boolean shared = false;
 
-	/** Creates a new ByteArrayQueue that shares this ByteArrayQueue's content. */
+	/** Creates a ByteArrayQueue that shares this ByteArrayQueue's content. */
 	@Override
 	public ByteArrayQueue clone() {
 		return new ByteArrayQueue(array, offset, length);
 	}
 
-	private ByteArrayQueue(byte[] array, int offset, int length) {
+	/** Creates a ByteArrayQueue that shares a byte array. */
+	public ByteArrayQueue(byte[] array, int offset, int length) {
 		this.array = array;
 		this.offset = offset;
 		this.length = length;
+		this.shared = true;
 	}
 
 	/** Creates a ByteArrayQueue with the initial capacity of 32 bytes. */
@@ -70,6 +73,7 @@ public class ByteArrayQueue implements Cloneable {
 		// Release buffer
 		if (array.length > 1024) {
 			array = new byte[32];
+			shared = false;
 		}
 	}
 
@@ -79,6 +83,7 @@ public class ByteArrayQueue implements Cloneable {
 		System.arraycopy(array, offset, newArray, 0, length);
 		array = newArray;
 		offset = 0;
+		shared = false;
 	}
 
 	/**
@@ -92,7 +97,7 @@ public class ByteArrayQueue implements Cloneable {
 	/** Adds a sequence of bytes into the tail of the queue. */
 	public ByteArrayQueue add(byte[] b, int off, int len) {
 		int newLength = length + len;
-		if (newLength > array.length) {
+		if (shared || newLength > array.length) {
 			setCapacity(Math.max(array.length << 1, newLength));
 		} else if (offset + newLength > array.length) {
 			System.arraycopy(array, offset, array, 0, length);
@@ -145,6 +150,7 @@ public class ByteArrayQueue implements Cloneable {
 		if (length == 0 && array.length > 1024) {
 			array = new byte[32];
 			offset = 0;
+			shared = false;
 		}
 		return this;
 	}
