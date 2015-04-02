@@ -139,13 +139,13 @@ public class FastCGIServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {
-		timeout = Numbers.parseInt(getServletConfig().getInitParameter("timeout"), 15000);
-		maxRequests = Numbers.parseInt(getServletConfig().getInitParameter("max_requests"), 499);
-		String addresses = getServletConfig().getInitParameter("addresses");
+		timeout = Numbers.parseInt(getInitParameter("timeout"), 15000);
+		maxRequests = Numbers.parseInt(getInitParameter("max_requests"), 499);
+		String addresses = getInitParameter("addresses");
 		if (addresses == null) {
 			throw new ServletException("missing param \"addresses\"");
 		}
-		String command = getServletConfig().getInitParameter("command");
+		String command = getInitParameter("command");
 		String[] s = addresses.split("[,;]");
 		socketQueue = new LinkedBlockingQueue<>();
 		for (int i = 0; i < s.length; i ++) {
