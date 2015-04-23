@@ -174,6 +174,7 @@ public class Conf {
 	}
 
 	public static void store(String name, Properties p) {
+		new File(confDir == null ? getAbsolutePath("conf") : confDir).mkdirs();
 		try (FileOutputStream out = new FileOutputStream(getConfPath(name, confDir))) {
 			p.store(out, null);
 		} catch (IOException e) {

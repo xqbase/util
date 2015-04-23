@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.xqbase</groupId>
 	<artifactId>xqbase-util</artifactId>
-	<version>0.2.4</version>
+	<version>0.2.5</version>
 	<packaging>jar</packaging>
 	<name>XQBase Util</name>
 	<description>Reusable Java components for www.xqbase.com</description>
@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-servlet-api</artifactId>
-			<version>8.0.12</version>
+			<version>8.0.21</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
