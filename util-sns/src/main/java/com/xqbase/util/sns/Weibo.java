@@ -379,6 +379,8 @@ public class Weibo {
 		}
 	}
 
+	/** @deprecated Use <code>getHttpPool().close()</code> */
+	@Deprecated
 	public static void shutdown() {
 		httpPool.close();
 	}

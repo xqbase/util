@@ -41,8 +41,4 @@ public class TaobaoIp {
 			return null;
 		}
 	}
-
-	public static void shutdown() {
-		httpPool.close();
-	}
 }
