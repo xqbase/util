@@ -34,20 +34,30 @@ public class ForwardedWrapper implements WrapperFactory {
 			return null;
 		}
 
-		String scheme = req.getHeader("X-Forwarded-Proto");
-		if (scheme == null) {
-			scheme = req.getScheme();
+		String forwardedFor = req.getHeader("X-Forwarded-For");
+		if (forwardedFor == null) {
+			forwardedFor = req.getRemoteAddr();
 		}
 
-		String remote = req.getHeader("X-Forwarded-For");
-		if (remote == null) {
-			remote = req.getRemoteAddr();
+		String proto = req.getHeader("X-Forwarded-Proto");
+		if (proto == null) {
+			proto = req.getScheme();
 		}
 
-		String pkcs7 = req.getHeader("X-Pkcs7-Certificates-Base64");
-		if (pkcs7 != null) {
+		String sslSessionId = req.getHeader("X-Forwarded-SSL-Session-ID");
+		if (sslSessionId != null) {
+			req.setAttribute("javax.servlet.request.ssl_session_id", sslSessionId);
+		}
+
+		String sslCipher = req.getHeader("X-Forwarded-SSL-Cipher");
+		if (sslCipher != null) {
+			req.setAttribute("javax.servlet.request.cipher_suite", sslCipher);
+		}
+
+		String certificates = req.getHeader("X-Forwarded-Certificates");
+		if (certificates != null) {
 			ByteArrayQueue baq = new ByteArrayQueue();
-			baq.add(Base64.getDecoder().decode(pkcs7));
+			baq.add(Base64.getDecoder().decode(certificates));
 			try {
 				Collection<? extends Certificate> certs = CertificateFactory.
 						getInstance("X509").generateCertificates(baq.getInputStream());
@@ -56,27 +66,27 @@ public class ForwardedWrapper implements WrapperFactory {
 			} catch (GeneralSecurityException e) {/**/}
 		}
 
-		String scheme_ = scheme;
-		String remote_ = remote;
+		String scheme = proto;
+		String remoteAddr = forwardedFor;
 		return new HttpServletRequestWrapper(req) {
 			@Override
 			public String getScheme() {
-				return scheme_;
+				return scheme;
 			}
 
 			@Override
 			public boolean isSecure() {
-				return super.isSecure() || "https".equalsIgnoreCase(scheme_);
+				return super.isSecure() || "https".equalsIgnoreCase(scheme);
 			}
 
 			@Override
 			public String getRemoteAddr() {
-				return remote_;
+				return remoteAddr;
 			}
 
 			@Override
 			public String getRemoteHost() {
-				return remote_;
+				return remoteAddr;
 			}
 		};
 	}

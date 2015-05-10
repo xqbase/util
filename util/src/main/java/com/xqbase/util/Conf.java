@@ -79,14 +79,6 @@ public class Conf {
 		}
 	}
 
-	/** @deprecated Upgraded to {@link #chdir(String)} */
-	@Deprecated
-	public static synchronized void setRoot(String absolutePath) {
-		if (absolutePath != null) {
-			rootDir = new File(absolutePath).getAbsolutePath();
-		}
-	}
-
 	public static synchronized String getAbsolutePath(String path) {
 		try {
 			if (rootDir == null) {
@@ -116,12 +108,6 @@ public class Conf {
 		} catch (IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	/** @deprecated Renamed to {@link #getAbsolutePath(String)} */
-	@Deprecated
-	public static synchronized String locate(String path) {
-		return getAbsolutePath(path);
 	}
 
 	public static Logger openLogger(String name, int limit, int count) {

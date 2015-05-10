@@ -52,7 +52,9 @@ public class ProxyPassServlet extends HttpServlet {
 		"Via",
 		"X-Forwarded-For",
 		"X-Forwarded-Proto",
-		"X-Pkcs7-Certificates-Base64",
+		"X-Forwarded-SSL-Session-ID",
+		"X-Forwarded-SSL-Cipher",
+		"X-Forwarded-Certificates",
 	};
 
 	private static final IOException CLIENT_EXCEPTION = new IOException(ProxyPassServlet.
@@ -182,12 +184,20 @@ public class ProxyPassServlet extends HttpServlet {
 			}
 			writeHeader(outSocket, "X-Forwarded-For", req.getRemoteAddr());
 			writeHeader(outSocket, "X-Forwarded-Proto", req.getScheme());
-			Object certs = req.getAttribute("javax.servlet.request.X509Certificate");
-			if (certs instanceof X509Certificate[]) {
-				writeHeader(outSocket, "X-Pkcs7-Certificates-Base64",
+			Object sslSessionId = req.getAttribute("javax.servlet.request.ssl_session_id");
+			if (sslSessionId instanceof String) {
+				writeHeader(outSocket, "X-Forwarded-SSL-Session-ID", (String) sslSessionId);
+			}
+			Object cipherSuite = req.getAttribute("javax.servlet.request.cipher_suite");
+			if (cipherSuite instanceof String) {
+				writeHeader(outSocket, "X-Forwarded-SSL-Cipher", (String) cipherSuite);
+			}
+			Object certificates = req.getAttribute("javax.servlet.request.X509Certificate");
+			if (certificates instanceof X509Certificate[]) {
+				writeHeader(outSocket, "X-Forwarded-Certificates",
 						Base64.getEncoder().encodeToString(CertificateFactory.
 						getInstance("X509").generateCertPath(Arrays.
-						asList((X509Certificate[]) certs)).getEncoded("PKCS7")));
+						asList((X509Certificate[]) certificates)).getEncoded("PKCS7")));
 			}
 			writeHeader(outSocket, "Connection", "Keep-Alive");
 
