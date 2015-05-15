@@ -13,7 +13,8 @@ public class TaobaoIp {
 	private static final String SERVICE_URL =
 			"http://ip.taobao.com/service/getIpInfo.php?ip=";
 
-	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
+	// Taobao IP' server keeps alive for only 5 seconds
+	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 1500);
 
 	public static HttpPool getHttpPool() {
 		return httpPool;
