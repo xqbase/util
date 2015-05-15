@@ -79,20 +79,21 @@ public class HttpUtil {
 		}
 	}
 
-	private static final byte[] CRLF = {'\r', '\n'};
-	private static final byte[] COLON = {':', ' '};
-	private static final byte[] GET = "GET ".getBytes();
-	private static final byte[] HEAD = "HEAD ".getBytes();
-	private static final byte[] POST = "POST ".getBytes();
-	private static final byte[] CONNECT = "CONNECT ".getBytes();
-	private static final byte[] HTTP11 = " HTTP/1.1\r\n".getBytes();
-	private static final byte[] HTTP10 = " HTTP/1.0\r\n".getBytes();
-	private static final byte[] HOST = "Host: ".getBytes();
-	private static final byte[] PROXY_AUTH = "Proxy-Authorization: ".getBytes();
-	private static final byte[] CONTENT_LENGTH = "Content-Length: ".getBytes();
-	private static final byte[] HEAD_END =
-			("Accept-Encoding: gzip\r\n" +
+	private static final byte[]
+			CRLF = {'\r', '\n'},
+			COLON = {':', ' '},
+			GET = "GET ".getBytes(),
+			HEAD = "HEAD ".getBytes(),
+			POST = "POST ".getBytes(),
+			CONNECT = "CONNECT ".getBytes(),
+			HTTP11 = " HTTP/1.1\r\n".getBytes(),
+			HTTP10 = " HTTP/1.0\r\n".getBytes(),
+			HOST = "Host: ".getBytes(),
+			PROXY_AUTH = "Proxy-Authorization: ".getBytes(),
+			CONTENT_LENGTH = "Content-Length: ".getBytes(),
+			HEAD_END = ("Accept-Encoding: gzip\r\n" +
 			"Connection: Keep-Alive\r\n\r\n").getBytes();
+
 	private static final HashSet<String> SKIP_HEADERS = new HashSet<>(Arrays.asList(
 		"ACCEPT-ENCODING", "CONNECTION", "CONTENT-LENGTH", "PROXY_AUTH"
 	));
