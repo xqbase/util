@@ -16,7 +16,6 @@ import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -27,6 +26,7 @@ import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
 import com.xqbase.util.Streams;
+import com.xqbase.util.function.BiConsumerEx;
 
 public class ProxyPassServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -179,9 +179,7 @@ public class ProxyPassServlet extends HttpServlet {
 					writeHeader(outSocket, key, value);
 				}
 			}
-			for (Map.Entry<String, String> entry : headerMap.entrySet()) {
-				writeHeader(outSocket, entry.getKey(), entry.getValue());
-			}
+			BiConsumerEx.forEach(headerMap, (k, v) -> writeHeader(outSocket, k, v));
 			writeHeader(outSocket, "X-Forwarded-For", req.getRemoteAddr());
 			writeHeader(outSocket, "X-Forwarded-Proto", req.getScheme());
 			Object sslSessionId = req.getAttribute("javax.servlet.request.ssl_session_id");

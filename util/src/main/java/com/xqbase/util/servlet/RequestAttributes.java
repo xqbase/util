@@ -1,7 +1,6 @@
 package com.xqbase.util.servlet;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -21,9 +20,7 @@ public class RequestAttributes implements WrapperFactory {
 
 	@Override
 	public Void getWrapper(HttpServletRequest req, HttpServletResponse resp) {
-		for (Map.Entry<String, String> entry : attrMap.entrySet()) {
-			req.setAttribute(entry.getKey(), entry.getValue());
-		}
+		attrMap.forEach(req::setAttribute);
 		return null;
 	}
 }
