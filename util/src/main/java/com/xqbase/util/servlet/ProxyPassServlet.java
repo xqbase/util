@@ -179,7 +179,8 @@ public class ProxyPassServlet extends HttpServlet {
 					writeHeader(outSocket, key, value);
 				}
 			}
-			BiConsumerEx.forEach(headerMap, (k, v) -> writeHeader(outSocket, k, v));
+			BiConsumerEx.forEach(headerMap, (key, value) ->
+					writeHeader(outSocket, key, value));
 			writeHeader(outSocket, "X-Forwarded-For", req.getRemoteAddr());
 			writeHeader(outSocket, "X-Forwarded-Proto", req.getScheme());
 			Object sslSessionId = req.getAttribute("javax.servlet.request.ssl_session_id");

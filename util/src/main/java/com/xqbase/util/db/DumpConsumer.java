@@ -1,12 +1,11 @@
 package com.xqbase.util.db;
 
 import java.io.PrintStream;
+import java.util.function.Consumer;
 
 import com.xqbase.util.Bytes;
-import com.xqbase.util.function.ConsumerEx;
 
-public class DumpConsumer implements
-		ConsumerEx<Row, RuntimeException>, AutoCloseable {
+public class DumpConsumer implements Consumer<Row>, AutoCloseable {
 	private static final int ROWS_PER_LINE = 256;
 
 	private int rows = 0, columns;

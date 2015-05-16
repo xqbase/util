@@ -116,13 +116,13 @@ public class HttpUtil {
 			headerBaq.add(PROXY_AUTH).add(proxyAuth.getBytes()).add(CRLF);
 		}
 		if (requestHeaders != null) {
-			requestHeaders.forEach((k, v) -> {
-				if (SKIP_HEADERS.contains(k.toUpperCase())) {
+			requestHeaders.forEach((key, values) -> {
+				if (SKIP_HEADERS.contains(key.toUpperCase())) {
 					return;
 				}
-				byte[] key = k.getBytes();
-				for (String value : v) {
-					headerBaq.add(key).add(COLON).add(value.getBytes()).add(CRLF);
+				byte[] key_ = key.getBytes();
+				for (String value : values) {
+					headerBaq.add(key_).add(COLON).add(value.getBytes()).add(CRLF);
 				}
 			});
 		}
