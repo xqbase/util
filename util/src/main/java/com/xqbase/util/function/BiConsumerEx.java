@@ -15,9 +15,9 @@ public interface BiConsumerEx<T, U, E extends Exception> {
 	}
 
 	public static <K, V, E extends Exception> void forEach(Map<K, V> map,
-			BiConsumerEx<? super K, ? super V, ? extends E> bc) throws E {
+			BiConsumerEx<? super K, ? super V, ? extends E> consumer) throws E {
 		for (Map.Entry<K, V> entry : map.entrySet()) {
-			bc.accept(entry.getKey(), entry.getValue());
+			consumer.accept(entry.getKey(), entry.getValue());
 		}
 	}
 }
