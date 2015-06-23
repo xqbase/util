@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
+import com.xqbase.util.Numbers;
 
 public class ForwardedWrapper implements WrapperFactory {
 	private static final X509Certificate[] EMPTY_X509CERTS = {};
@@ -66,6 +67,19 @@ public class ForwardedWrapper implements WrapperFactory {
 			} catch (GeneralSecurityException e) {/**/}
 		}
 
+		final boolean secure = "https".equalsIgnoreCase(proto);
+		final int serverPort;
+		String host = req.getHeader("Host");
+		if (host == null) {
+			serverPort = secure ? 443 : 80;
+		} else {
+			int colon = host.indexOf(':');
+			if (colon < 0) {
+				serverPort = secure ? 443 : 80;
+			} else {
+				serverPort = Numbers.parseInt(host.substring(colon + 1));
+			}
+		}
 		final String scheme = proto;
 		final String remoteAddr = forwardedFor;
 		return new HttpServletRequestWrapper(req) {
@@ -76,7 +90,12 @@ public class ForwardedWrapper implements WrapperFactory {
 
 			@Override
 			public boolean isSecure() {
-				return super.isSecure() || "https".equalsIgnoreCase(scheme);
+				return secure;
+			}
+
+			@Override
+			public int getServerPort() {
+				return serverPort;
 			}
 
 			@Override
