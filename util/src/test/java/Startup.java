@@ -29,6 +29,7 @@ public class Startup {
 		sslConnector.setProperty("truststoreType", "JKS");
 		sslConnector.setProperty("truststoreFile",
 				Conf.getAbsolutePath("conf/localhost.jks"));
+		sslConnector.setProperty("sslEnabledProtocols", "SSLv2Hello,TLSv1,TLSv1.1,TLSv1.2");
 		Tomcat tomcat = new Tomcat();
 		tomcat.setPort(80);
 		tomcat.getService().addConnector(connector);
