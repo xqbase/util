@@ -5,6 +5,14 @@ import java.io.PrintWriter;
 import java.security.SecureRandom;
 import java.util.Random;
 
+/**
+ * Various <b>byte[]</b> operations, including:
+ * <li>Encoding/Decoding to/from hexadecimal</li>
+ * <li>Storing/Retrieving <b>short</b>, <b>int</b> or <b>long</b> to/from <b>byte[]</b></li>
+ * <li>Concatenating/Truncating/Comparing of <b>byte[]</b>s
+ * <li>Generating random <b>byte[]</b></li>
+ * <li>Dumping for debug</li>
+ */
 public class Bytes {
 	public static final boolean BIG_ENDIAN = false;
 	public static final boolean LITTLE_ENDIAN = true;
