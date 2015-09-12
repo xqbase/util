@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 /**
- * Various <b>byte[]</b> operations, including:
+ * Variety of <b>byte[]</b> operations, including:
  * <li>Encoding/Decoding to/from hexadecimal</li>
  * <li>Storing/Retrieving <b>short</b>, <b>int</b> or <b>long</b> to/from <b>byte[]</b></li>
  * <li>Concatenating/Truncating/Comparing of <b>byte[]</b>s

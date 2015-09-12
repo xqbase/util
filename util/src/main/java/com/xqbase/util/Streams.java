@@ -4,9 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/** Copy from an {@link InputStream} to an {@link OutputStream} */
 public class Streams {
 	private static final int BUFFER_SIZE = 2048;
 
+	/**
+	 * Copy from an {@link InputStream} to an {@link OutputStream}
+	 *
+	 * @param flush <code>true</code> to flush OutputStream during copy
+	 */
 	public static void copy(InputStream in,
 			OutputStream out, boolean flush) throws IOException {
 		byte[] buffer = new byte[BUFFER_SIZE];
@@ -19,6 +25,10 @@ public class Streams {
 		}
 	}
 
+	/**
+	 * Copy from an {@link InputStream} to an {@link OutputStream}
+	 * without flushing OutputStream during copy
+	 */
 	public static void copy(InputStream in,
 			OutputStream out) throws IOException {
 		copy(in, out, false);

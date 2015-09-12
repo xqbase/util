@@ -55,7 +55,7 @@ Class **Numbers** has 4 types of methods:
 All these methods will return *default value* if null or not parsable.
 
 ### Bytes
-Various **byte[]** operations, including:
+Variety of **byte[]** operations, including:
 - Encoding/Decoding to/from hexadecimal
 - Storing/Retrieving **short**, **int** or **long** to/from **byte[]**
 - Concatenating/Truncating/Comparing of **byte[]**s
@@ -89,8 +89,10 @@ try (FileOutputStream file2 = new FileOutputStream(...)) {
 ```
 
 ### Streams
+Copy from an [**InputStream**](http://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html) to an [**OutputStream**](http://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html).
 
 ### Time
+Convert date or time string to Unix time (in milliseconds), and vice versa.
 
 ### Conf
 
