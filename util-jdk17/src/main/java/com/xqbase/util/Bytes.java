@@ -7,11 +7,13 @@ import java.util.Random;
 
 /**
  * Variety of <b>byte[]</b> operations, including:
+ * <ul>
  * <li>Encoding/Decoding to/from hexadecimal</li>
  * <li>Storing/Retrieving <b>short</b>, <b>int</b> or <b>long</b> to/from <b>byte[]</b></li>
  * <li>Concatenating/Truncating/Comparing of <b>byte[]</b>s
  * <li>Generating random <b>byte[]</b></li>
  * <li>Dumping for debug</li>
+ * </ul>
  */
 public class Bytes {
 	/** Not Little-Ending, i.e. storing/retrieving numbers in Big-Ending (default) byte order */

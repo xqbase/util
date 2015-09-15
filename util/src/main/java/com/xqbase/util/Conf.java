@@ -23,6 +23,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+/**
+ * Easy Locating Path<p>
+ * Easy Loading/Storing Configurations<p>
+ * Easy Opening/Closing Logs<p>
+ * Easy Traversing Classes
+ */
 public class Conf {
 	public static boolean DEBUG = false;
 
@@ -197,6 +203,7 @@ public class Conf {
 		}
 	}
 
+	/** Traverse all classes under given packages */
 	public static ArrayList<String> getClasses(String... packageNames) {
 		ArrayList<String> classes = new ArrayList<>();
 		for (String packageName : packageNames) {
