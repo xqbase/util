@@ -104,7 +104,19 @@ Convert date or time string to Unix time (in milliseconds), and vice versa.
 
 #### Easy Locating Path
 
+```java
+Conf.getAbsolutePath("conf/Test.properties");
+```
 
+This will get the absolute path of **conf/Test.properties** relative to the current folder, which is the parent folder of **classpath** (**classes/** or **lib/**) by default.
+
+The current folder can be changed by:
+
+```java
+Conf.chdir("../src/main/webapp/WEB-INF");
+```
+
+This is very useful to debug a Maven project in Eclipse. The **classpath** in Eclipse may be **target/classes** but configurations and logs may be placed under **src/main/webapp/WEB-INF**.
 
 #### Easy Loading Configurations
 
@@ -113,13 +125,13 @@ Properties p = Conf.load("Test");
 ```
 
 This will load the following files (if exists) successively:
-- ***A.*** **/Test.properties** as resource (in **/classes/** folder or jar file)
-- ***B.*** **conf/Test.properties** out of **classpath** (**/classes/** folder or jar file)
+- ***A.*** **/Test.properties** as resource (in **classes/** folder or jar file)
+- ***B.*** **conf/Test.properties** relative to the current folder (the parent folder of **classpath** by default)
 - ***C.*** **Test.properties** defined in Conf.properties
 
 The latter overwrites the former, so project can be deployed without changing inner configurations.
 
-Conf.properties (as resource or out of **classpath**) looks like:
+Conf.properties (as resource or atop **classpath**) looks like:
 
 ```
 conf_dir=/etc/test
@@ -144,7 +156,7 @@ jdbc.url=jdbc:mysql://10.1.1.10/deploy
 
 We can deploy our project simply by copying jar or war files, and the program will finally get the *deployment* configuration from properties ***C***.
 
-Any default configurations can be written in properties ***A*** and will take effect without changing properties ***C***, e.g.
+Any default configurations can be written into properties ***A*** and will take effect without changing properties ***C***, e.g.
 
 ```
 jdbc.driver=com.mysql.jdbc.NonRegisteringDriver
@@ -156,21 +168,21 @@ jdbc.driver=com.mysql.jdbc.NonRegisteringDriver
 Conf.store("Test", p);
 ```
 
-This will store the properties file into **conf_dir** (if defined in Conf.properties) or **conf/** folder out of **classpath**.
+This will store the properties file into **conf_dir** (if defined in Conf.properties) or **conf/** relative to the current folder.
 
 #### Easy Opening/Closing Logs
 
 ```java
-Logger originalLogger = Conf.openLogger("Test", 1048576, 10);
+Logger logger = Conf.openLogger("Test", 1048576, 10);
 ```
 
-This will set default logger ([**java.util.logging.Logger**](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Logger.html)) into folder **log_dir** (if defined in Conf.properties) or **logs/** folder out of **classpath**.
+This will open a logger ([**java.util.logging.Logger**](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Logger.html)) with output file under folder **log_dir** (if defined in Conf.properties) or **logs/** relative to the current folder.
 
 ```java
-Conf.closeLogger(Log.getAndSet(originalLogger));
+Conf.closeLogger(logger);
 ```
 
-This will close default logger and restore to **originalLogger**.
+This will close the logger.
 
 #### Easy Traversing Classes
 
@@ -183,6 +195,34 @@ for (String classes : Conf.getClasses("com.xqbase.util", "com.xqbase.test")) {
 This will traverse all classes under given packages.
 
 ### Log
+
+Android style logging but without tag:
+- `Log.v/d/i/w/e(String message)`
+- `Log.v/d/i/w/e(Throwable throwable)`
+- `Log.v/d/i/w/e(String message, Throwable throwable)`
+
+Make sure to set a [**java.util.logging.Logger**](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Logger.html) before using logging, e.g.
+
+```java
+Logger originalLogger = Log.getAndSet(Conf.openLogger("Test", 1048576, 10));
+```
+
+This will open and set a new logger and get the original one.
+
+Make sure to close current logger and restore original one before shutdown, e.g.
+
+```java
+Conf.closeLogger(Log.getAndSet(originalLogger));
+```
+
+**Log.suffix** can be set in a filter:
+
+```java
+Log.suffix.set(" [" + req.getRemoteAddr() + ", " + req.getRequestURL() + ", " +
+		req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]");
+```
+
+This will append additional information (Client-IP, URL, Referer and User-Agent) after each logging message.
 
 ### Runnables
 

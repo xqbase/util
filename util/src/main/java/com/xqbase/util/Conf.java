@@ -79,12 +79,19 @@ public class Conf {
 		return Conf.class;
 	}
 
+	/**
+	 * Change the current folder
+	 */
 	public static synchronized void chdir(String path) {
 		if (path != null) {
 			rootDir = new File(getAbsolutePath(path)).getAbsolutePath();
 		}
 	}
 
+	/**
+	 * Get the absolute path relative to the current folder,
+	 * which is the parent folder of <b>classpath</b> (<b>classes/</b> or <b>lib/</b>) by default
+	 */
 	public static synchronized String getAbsolutePath(String path) {
 		try {
 			if (rootDir == null) {
@@ -116,6 +123,14 @@ public class Conf {
 		}
 	}
 
+	/**
+	 * Open a {@link Logger} with output file under folder <b>log_dir</b>
+	 * (if defined in Conf.properties) or <b>logs/</b> relative to the current folder
+	 *
+	 * @param name logging output file with the pattern "${name}%g.log"
+	 * @param limit the maximum number of bytes to write to any one file count the number of files to use
+	 * @param count the number of files to use
+	 */
 	public static Logger openLogger(String name, int limit, int count) {
 		Logger logger = Logger.getAnonymousLogger();
 		logger.setLevel(Level.ALL);
@@ -141,6 +156,9 @@ public class Conf {
 		return logger;
 	}
 
+	/**
+	 * Close a logger
+	 */
 	public static void closeLogger(Logger logger) {
 		for (Handler handler : logger.getHandlers()) {
 			logger.removeHandler(handler);
@@ -148,6 +166,15 @@ public class Conf {
 		}
 	}
 
+	/**
+	 * Load the following properties (if exists) successively:
+	 * <ul>
+	 * <li>A. <b>/${name}.properties</b> as resource (in <b>classes/</b> folder or jar file)</li>
+	 * <li>B. <b>conf/${name}.properties</b> relative to the current folder
+	 *     (the parent folder of <b>classpath</b> by default)</li>
+	 * <li>C. <b>${name}.properties</b> under folder <b>conf_dir</b> defined in Conf.properties</li>
+	 * </ul>
+	 */
 	public static Properties load(String name) {
 		Properties p = new Properties();
 		InputStream in = getParentClass().getResourceAsStream("/" + name + ".properties");
@@ -165,6 +192,10 @@ public class Conf {
 		return p;
 	}
 
+	/**
+	 * Store the properties file into <b>conf_dir</b> (if defined in Conf.properties) or
+	 * <b>conf/</b> relative to the current folder
+	 */
 	public static void store(String name, Properties p) {
 		new File(confDir == null ? getAbsolutePath("conf") : confDir).mkdirs();
 		try (FileOutputStream out = new FileOutputStream(getConfPath(name, confDir))) {
@@ -179,6 +210,10 @@ public class Conf {
 	private static final HashSet<String> FALSE_VALUES =
 			new HashSet<>(Arrays.asList("false", "no", "off", "disable", "disabled"));
 
+	/**
+	 * @return <b>true</b> for "true", "yes", "on", "enable" or "enabled";
+	 *		   <b>false</b> for "false", "no", "off", "disable" or "disabled"
+	 */
 	public static boolean getBoolean(String value, boolean defaultValue) {
 		if (value == null) {
 			return defaultValue;
@@ -203,7 +238,9 @@ public class Conf {
 		}
 	}
 
-	/** Traverse all classes under given packages */
+	/**
+	 * Traverse all classes under given packages
+	 */
 	public static ArrayList<String> getClasses(String... packageNames) {
 		ArrayList<String> classes = new ArrayList<>();
 		for (String packageName : packageNames) {
