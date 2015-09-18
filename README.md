@@ -226,8 +226,8 @@ This will append additional information (Client-IP, URL, Referer and User-Agent)
 
 ### Runnables
 
-Wrap a Runnable [**Runnable**](http://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) in order to:
-- Make the logging suffix in *branch thread* (callee thread) same as *trunk thread* (caller thread)
+Wrap a [**Runnable**](http://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) in order to:
+- Make the logging suffix in *branch thread* (callee thread) the same as *trunk thread* (caller thread)
 - Make the logging stack trace in *branch thread* concatenating with *trunk thread*
 - Count number of *branch thread*s
 
@@ -273,13 +273,13 @@ java.lang.Exception
 INFO: Stopped [Test Suffix]
 ```
 
-Without **Runnables.wrap()**, no suffix and stack trace of *trunk thread* can be got, and number of *branch thread*s will not be counted.:
+Without **Runnables.wrap()**, no suffix and stack trace of *trunk thread* can be got, and number of *branch thread*s will not be counted:
 
 ```
 2015-09-01 00:00:00.000 com.xqbase.util.TestLog main
 INFO: Started [Test Suffix]
 2015-09-01 00:00:01.000 com.xqbase.util.TestLog main
-INFO: Number of Branch Threads: 0
+INFO: Number of Branch Threads: 0 [Test Suffix]
 2015-09-01 00:00:02.000 com.xqbase.util.TestLog lambda$0
 SEVERE: Exception Thrown in Branch Thread
 java.lang.Exception

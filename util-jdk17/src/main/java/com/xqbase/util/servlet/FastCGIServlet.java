@@ -63,18 +63,17 @@ class SocketEntry {
 public class FastCGIServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	private static final int
-			FCGI_BEGIN_REQUEST = 1,
-			// FCGI_ABORT_REQUEST = 2,
-			FCGI_END_REQUEST = 3,
-			FCGI_PARAMS = 4,
-			FCGI_STDIN = 5,
-			FCGI_STDOUT = 6,
-			FCGI_STDERR = 7;
-	private static final int
-			RESP_HEADER = 0,
-			RESP_BODY = 1,
-			RESP_END = 2;
+	private static final int FCGI_BEGIN_REQUEST = 1;
+	// private static final int FCGI_ABORT_REQUEST = 2;
+	private static final int FCGI_END_REQUEST = 3;
+	private static final int FCGI_PARAMS = 4;
+	private static final int FCGI_STDIN = 5;
+	private static final int FCGI_STDOUT = 6;
+	private static final int FCGI_STDERR = 7;
+
+	private static final int RESP_HEADER = 0;
+	private static final int RESP_BODY = 1;
+	private static final int RESP_END = 2;
 
 	private static final IOException CLIENT_EXCEPTION = new IOException(FastCGIServlet.
 			class.getName() + ".CLIENT_EXCEPTION");

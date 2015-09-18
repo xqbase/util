@@ -40,15 +40,17 @@ public class HttpForm {
 		return headers;
 	}
 
-	private static final byte[]
-			EQ = {'='},
-			AMP = {'&'},
-			QUOT = {'"'},
-			DASH = {'-', '-'},
-			CRLF = {'\r', '\n'},
-			CONTENT_DISPOSITION_NAME = "Content-Disposition: form-data; name=\"".getBytes(),
-			FILENAME = "; filename=\"".getBytes(),
-			CONTENT_TYPE = "Content-Type: ".getBytes();
+	private static final byte[] EQ = {'='};
+	private static final byte[] AMP = {'&'};
+	private static final byte[] QUOT = {'"'};
+	private static final byte[] DASH = {'-', '-'};
+	private static final byte[] CRLF = {'\r', '\n'};
+	private static final byte[] CONTENT_DISPOSITION_NAME =
+			"Content-Disposition: form-data; name=\"".getBytes();
+	private static final byte[] FILENAME =
+			"; filename=\"".getBytes();
+	private static final byte[] CONTENT_TYPE =
+			"Content-Type: ".getBytes();
 
 	private String encode(String s) {
 		try {

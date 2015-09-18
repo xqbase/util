@@ -20,7 +20,7 @@ public class Runnables {
 	 * Wrap a {@link Runnable} in order to:
 	 * <ul>
 	 * <li>Make the logging suffix in <b>branch thread</b> (callee thread)
-	 *		same as <b>trunk thread</b> (caller thread)</li>
+	 *		the same as <b>trunk thread</b> (caller thread)</li>
 	 * <li>Make the logging stack trace in <b>branch thread</b>
 	 *		concatenating with <b>trunk thread</b></li>
  	 * <li>Count number of <b>branch thread</b>s</li>
