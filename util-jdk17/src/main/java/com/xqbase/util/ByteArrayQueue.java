@@ -110,7 +110,7 @@ public class ByteArrayQueue implements Cloneable {
 
 	/**
 	 * @return An {@link OutputStream} suitable for writing binary data
-	 *         into the tail of the queue.
+	 *			into the tail of the queue.
 	 * @see #add(byte[])
 	 * @see #add(byte[], int, int)
 	 */
@@ -157,7 +157,7 @@ public class ByteArrayQueue implements Cloneable {
 
 	/**
 	 * @return An {@link InputStream} suitable for reading binary data
-	 *         from the head of the queue.
+	 *			from the head of the queue.
 	 * @see #remove(byte[])
 	 * @see #remove(byte[], int, int)
 	 */

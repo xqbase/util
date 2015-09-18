@@ -7,36 +7,75 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.xqbase.util.function.ConsumerEx;
 import com.xqbase.util.function.SupplierEx;
 
+/**
+ * A simple and thread-safe pool implemented by deque:
+ * active objects are returned and borrowed from the head,
+ * and timeout objects are removed from the tail.<p>
+ *
+ * A pooled object is controlled by its pool entry. When an entry closed,
+ * the pooled object is either returned to the pool or destroyed, e.g.
+ * <pre><code>
+ *	try (Pool<Socket>.Entry entry = pool.borrow()) {
+ *		Socket socket = entry.getObject();
+ *		// use the socket
+ *		...
+ *		// return if socket is ok
+ *		entry.setValid(true);
+ *	} catch (IOException e) {
+ *		// handle exception
+ *		...
+ *		// destroy if exception thrown
+ *		// entry.setValid(false) by default
+ *	}
+ * </code></pre>
+ *
+ * @param <T> type of pooled object
+ * @param <E> type of exception when borrowing
+ */
 public class Pool<T, E extends Exception> implements AutoCloseable {
 	public class Entry implements AutoCloseable {
 		T object;
 		long created, borrowed, borrows;
 		boolean valid;
 
+		/** @return the pooled object */
 		public T getObject() {
 			return object;
 		}
 
+		/** @return created time of the pooled object in milliseconds */
 		public long getCreated() {
 			return created;
 		}
 
+		/** @return last borrowed time in milliseconds */
 		public long getBorrowed() {
 			return borrowed;
 		}
 
+		/** @return how many times borrowed */
 		public long getBorrows() {
 			return borrows;
 		}
 
+		/** @return whether the entry is valid */
 		public boolean isValid() {
 			return valid;
 		}
 
+		/**
+		 * Validate or invalidate the entry
+		 *
+		 * @see {@link #close()}
+		 */
 		public void setValid(boolean valid) {
 			this.valid = valid;
 		}
 
+		/**
+		 * A valid entry will return itself to the pool,
+		 * while a invalid entry will destroy its pooled object.
+		 */
 		@Override
 		public void close() {
 			activeCount.decrementAndGet();
@@ -61,6 +100,13 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	AtomicInteger activeCount = new AtomicInteger(0);
 	volatile boolean closed = false;
 
+	/**
+	 * Create a pool by the given initializer, finalizer and timeout.
+	 *
+	 * @param initializer a supplier to create the pooled object, e.g. Socket::new
+	 * @param finalizer a consumer to destroy the pooled object, e.g. Socket::close
+	 * @param timeout a pooled object not, in milliseconds
+	 */
 	public Pool(SupplierEx<? extends T, ? extends E> initializer,
 			ConsumerEx<? super T, ?> finalizer, int timeout) {
 		this.initializer = initializer;
@@ -68,6 +114,13 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		this.timeout = timeout;
 	}
 
+	/**
+	 * Borrow an object from the pool, or create a new object
+	 * if no valid objects in the pool
+	 *
+	 * @return {@link Entry} to the pooled object
+	 * @throws E exception thrown by initializer
+	 */
 	public Entry borrow() throws E {
 		long now = System.currentTimeMillis();
 		if (timeout > 0) {
@@ -106,18 +159,34 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		return entry;
 	}
 
+	/**
+	 * @return number of active (borrowed) entries from the pool
+	 */
 	public int getActiveCount() {
 		return activeCount.get();
 	}
 
+	/**
+	 * @return number of inactive (returned) entries in the pool
+	 */
 	public int getInactiveCount() {
 		return deque.size();
 	}
 
+	/**
+	 * Reopen the pool.</p>
+	 * Closing of an entry (must be valid) will return its pooled object
+	 * into the reopened pool.
+	 */
 	public void reopen() {
 		closed = false;
 	}
 
+	/**
+	 * Close the pool.</p>
+	 * Closing of an entry (must be valid) will destroy its pooled object
+	 * if the pool is closed.
+	 */
 	@Override
 	public void close() {
 		closed = true;

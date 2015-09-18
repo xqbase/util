@@ -104,7 +104,7 @@ public class Time {
 
 	/**
 	 * Convert a Unix time (in milliseconds) to a date time string,
-     * rounding to the second
+	 * rounding to the second
 	 */
 	public static String toString(long time) {
 		return toString(time, false);
@@ -166,7 +166,7 @@ public class Time {
 	}
 
 	/**
-	 * Sleep for some milliseconds like {@link Thread#sleep(long)} but not interrupted<p>
+	 * Sleep for some milliseconds like {@link Thread#sleep(long)} but ignore interruption<p>
 	 * The <i>interrupted status</i> will not be cleared if current thread is interrupted during sleep
 	 */
 	public static void sleep(int millis) {

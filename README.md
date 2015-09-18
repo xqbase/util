@@ -127,7 +127,7 @@ Properties p = Conf.load("Test");
 This will load the following files (if exists) successively:
 - ***A.*** **/Test.properties** as resource (in **classes/** folder or jar file)
 - ***B.*** **conf/Test.properties** relative to the current folder (the parent folder of **classpath** by default)
-- ***C.*** **Test.properties** defined in Conf.properties
+- ***C.*** **Test.properties** given in Conf.properties
 
 The latter overwrites the former, so project can be deployed without changing inner configurations.
 
@@ -168,7 +168,7 @@ jdbc.driver=com.mysql.jdbc.NonRegisteringDriver
 Conf.store("Test", p);
 ```
 
-This will store the properties file into **conf_dir** (if defined in Conf.properties) or **conf/** relative to the current folder.
+This will store the properties file into **conf_dir** (if given in Conf.properties) or **conf/** relative to the current folder.
 
 #### Easy Opening/Closing Logs
 
@@ -176,7 +176,7 @@ This will store the properties file into **conf_dir** (if defined in Conf.proper
 Logger logger = Conf.openLogger("Test", 1048576, 10);
 ```
 
-This will open a logger ([**java.util.logging.Logger**](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Logger.html)) with output file under folder **log_dir** (if defined in Conf.properties) or **logs/** relative to the current folder.
+This will open a logger ([**java.util.logging.Logger**](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Logger.html)) with output file under folder **log_dir** (if given in Conf.properties) or **logs/** relative to the current folder.
 
 ```java
 Conf.closeLogger(logger);
@@ -226,14 +226,149 @@ This will append additional information (Client-IP, URL, Referer and User-Agent)
 
 ### Runnables
 
+Wrap a Runnable [**Runnable**](http://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) in order to:
+- Make the logging suffix in *branch thread* (callee thread) same as *trunk thread* (caller thread)
+- Make the logging stack trace in *branch thread* concatenating with *trunk thread*
+- Count number of *branch thread*s
+
+For example:
+
+```java
+System.setProperty("java.util.logging.SimpleFormatter.format",
+		"%1$tY-%1$tm-%1$td %1$tk:%1$tM:%1$tS.%1$tL %2$s%n%4$s: %5$s%6$s%n");
+Logger logger = Log.getAndSet(Conf.openLogger("Test", 1048576, 10));
+Log.suffix.set(" [Test Suffix]");
+Log.i("Started");
+ExecutorService executor = Executors.newCachedThreadPool();
+executor.execute(Runnables.wrap(() -> { // Line 15
+	Time.sleep(2000);
+	try {
+		throw new Exception(); // Line 18
+	} catch (Exception e) {
+		Log.e("Exception Thrown in Branch Thread", e);
+	}
+}));
+Time.sleep(1000);
+Log.i("Number of Branch Threads: " + Runnables.getThreadNum());
+Runnables.shutdown(executor);
+Log.i("Stopped");
+Conf.closeLogger(Log.getAndSet(logger));
+```
+
+This will output:
+
+```
+2015-09-01 00:00:00.000 com.xqbase.util.TestLog main
+INFO: Started [Test Suffix]
+2015-09-01 00:00:01.000 com.xqbase.util.TestLog main
+INFO: Number of Branch Threads: 1 [Test Suffix]
+2015-09-01 00:00:02.000 com.xqbase.util.TestLog lambda$0
+SEVERE: Exception Thrown in Branch Thread [Test Suffix]
+java.lang.Exception
+	at com.xqbase.util.TestLog.lambda$0(TestLog.java:18)              // <-- In Branch Thread
+	at com.xqbase.util.TestLog$$Lambda$1/29854731.run(Unknown Source) // <-- In Trunk Thread
+	at com.xqbase.util.TestLog.main(TestLog.java:15)
+
+2015-09-01 00:00:02.000 com.xqbase.util.TestLog main
+INFO: Stopped [Test Suffix]
+```
+
+Without **Runnables.wrap()**, no suffix and stack trace of *trunk thread* can be got, and number of *branch thread*s will not be counted.:
+
+```
+2015-09-01 00:00:00.000 com.xqbase.util.TestLog main
+INFO: Started [Test Suffix]
+2015-09-01 00:00:01.000 com.xqbase.util.TestLog main
+INFO: Number of Branch Threads: 0
+2015-09-01 00:00:02.000 com.xqbase.util.TestLog lambda$0
+SEVERE: Exception Thrown in Branch Thread
+java.lang.Exception
+	at com.xqbase.util.TestLog.lambda$0(TestLog.java:18)
+	at com.xqbase.util.TestLog$$Lambda$1/29854731.run(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+```
+
 ### Pool
+
+A simple and thread-safe pool implemented by deque: active objects are returned and borrowed from the head, and timeout objects are removed from the tail.
+
+An **initializer** (to create an object), a **finalizer** (to destroy an object) and a timeout (in milliseconds) must be given for a pool.
+
+A pooled object is controlled by its pool *entry*. When an *entry* closed, the pooled object is either returned to the pool or destroyed, e.g.
+
+```java
+try (Pool<Socket>.Entry entry = pool.borrow()) {
+	Socket socket = entry.getObject();
+	// use the socket
+	...
+	// return if socket is ok
+	entry.setValid(true);
+} catch (IOException e) {
+	// handle exception
+	...
+	// destroy if exception thrown
+	// entry.setValid(false) by default
+}
+```
+
+Closing of a pool will destroy all inactive (returned) objects, and any active (borrowed) objects (whether valid or invalid) will be destroyed when returning.
 
 ### Lazy
 
+A lazy factory for singletons implemented by double-checked locking.
+
+An **initializer** (to create an instance) and a **finalizer** (to destroy the instance) must be given.
+
+Closing of a lazy factory will destroy the instance if created.
+
 ### Service
 
+Create a Windows or Linux service, which can be stopped gracefully.
+
+A Java program running as a service, whether in Windows or Linux, can be written as:
+
+```java 
+private static Service service = new Service();
+
+public static void main(String[] args) {
+	if (!service.startup(args)) {
+		return;
+	}
+	// initialize
+	...
+	while (!Thread.interrupted()) {
+		// keep service running
+		...
+	}
+	// close resources
+	...
+	service.shutdown();
+}
+```
+
+A Windows service is usually made with the *service runner* of [Apache Commons Daemon](http://commons.apache.org/proper/commons-daemon/). The *service runner* will call the main method with an argument "stop" in another thread to notify shutdown, which can be caught by **service.startup()**. So the **Service** object must be a singleton.
+
+A Linux service may receive SIGTERM (kill) and start the JVM's *shutdown hook*.
+
+**service.startup()** will consider the following cases:
+- If the argument is "stop", it may be a stop notification by the *service runner* and the *shutdown hook* will be started.
+- If the main method is not called by the *service runner* (the main method is on the top of stack trace), it will add a *shutdown hook* to catch SIGTERM.
+- Otherwise (may be called by the *service runner*) it will do nothing.
+
+The *shutdown hook* will be suspended until **service.shutdown()** is called. This can prevent the main thread being killed before closing resources.
+
+A service can be easily controlled by the following methods:
+- `service.shutdownNow()` to enforce to stop the service.
+- `service.isInterrupted()` to check whether the service is stopping. In the main thread, this can be replaced with `Thread.interrupted()` or `Thread.currentThread().isInterrupted()`. 
+- `service.execute(Runnable)` to execute a Runnable in the thread pool (created by the service). This runnable will be interrupted when the service is stopping. 
+- `service.addShutdownHook(Runnable)` to add a Runnable (NOT the JVM's *shutdown hook*) into the queue which will be run when the service is stopping.
+- `service.register(AutoCloseable)` to add an AutoCloseable into the queue which will be closed when the service is stopping.
+
 ### Base64
-Encode Byte Array to Base64 String or Decode Base64 String to Byte Array.
+
+Encode byte array to Base64 string or decode Base64 string to byte array.
 
 Use [**java.util.Base64**](http://docs.oracle.com/javase/8/docs/api/java/util/Base64.html) for JDK 1.8.
 

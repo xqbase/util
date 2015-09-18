@@ -171,7 +171,7 @@ public class Conf {
 	 * <ul>
 	 * <li>A. <b>/${name}.properties</b> as resource (in <b>classes/</b> folder or jar file)</li>
 	 * <li>B. <b>conf/${name}.properties</b> relative to the current folder
-	 *     (the parent folder of <b>classpath</b> by default)</li>
+	 *		(the parent folder of <b>classpath</b> by default)</li>
 	 * <li>C. <b>${name}.properties</b> under folder <b>conf_dir</b> defined in Conf.properties</li>
 	 * </ul>
 	 */
