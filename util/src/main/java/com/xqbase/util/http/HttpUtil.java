@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -103,26 +104,31 @@ public class HttpUtil {
 			requestHeaders, boolean head) throws IOException {
 		ByteArrayQueue headerBaq = new ByteArrayQueue();
 		if (requestBody == null) {
-			headerBaq.add(head ? HEAD : GET).add(path.getBytes()).add(HTTP11);
+			headerBaq.add(head ? HEAD : GET).
+					add(path.getBytes(StandardCharsets.ISO_8859_1)).add(HTTP11);
 		} else {
 			String length = "" + requestBody.length();
-			headerBaq.add(POST).add(path.getBytes()).add(HTTP11).
+			headerBaq.add(POST).
+					add(path.getBytes(StandardCharsets.ISO_8859_1)).add(HTTP11).
 					add(CONTENT_LENGTH).add(length.getBytes()).add(CRLF);
 		}
 		if (requestHeaders == null || !requestHeaders.containsKey("Host")) {
-			headerBaq.add(HOST).add(host.getBytes()).add(CRLF);
+			headerBaq.add(HOST).
+					add(host.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		if (proxyAuth != null) {
-			headerBaq.add(PROXY_AUTH).add(proxyAuth.getBytes()).add(CRLF);
+			headerBaq.add(PROXY_AUTH).
+					add(proxyAuth.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		if (requestHeaders != null) {
 			requestHeaders.forEach((key, values) -> {
 				if (SKIP_HEADERS.contains(key.toUpperCase())) {
 					return;
 				}
-				byte[] key_ = key.getBytes();
+				byte[] key_ = key.getBytes(StandardCharsets.ISO_8859_1);
 				for (String value : values) {
-					headerBaq.add(key_).add(COLON).add(value.getBytes()).add(CRLF);
+					headerBaq.add(key_).add(COLON).
+							add(value.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 				}
 			});
 		}
@@ -307,10 +313,12 @@ public class HttpUtil {
 	static Socket connect(Socket socket, String host, int port,
 			String proxyAuth, boolean secure) throws IOException {
 		ByteArrayQueue headerBaq = new ByteArrayQueue();
-		headerBaq.add(CONNECT).add(host.getBytes()).add(COLON, 0, 1).
+		headerBaq.add(CONNECT).
+				add(host.getBytes(StandardCharsets.ISO_8859_1)).add(COLON, 0, 1).
 				add(("" + port).getBytes()).add(HTTP10);
 		if (proxyAuth != null) {
-			headerBaq.add(PROXY_AUTH).add(proxyAuth.getBytes()).add(CRLF);
+			headerBaq.add(PROXY_AUTH).
+					add(proxyAuth.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		headerBaq.add(CRLF);
 		Streams.copy(headerBaq.getInputStream(), socket.getOutputStream());
@@ -328,7 +336,7 @@ public class HttpUtil {
 		HttpParam param = new HttpParam(httpProxy, url);
 		if (param.connect) {
 			try (Socket socket = connect(SocketPool.createSocket(param.socketHost,
-					param.socketPort, param.secure, timeout),
+					param.socketPort, false, timeout),
 					param.host, param.proxyAuth, param.secure)) {
 				return request(socket, param.path, param.host, null, requestBody,
 						requestHeaders, head, responseBody, responseHeaders, null);			
