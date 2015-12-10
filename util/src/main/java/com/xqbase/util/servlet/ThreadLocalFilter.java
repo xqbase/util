@@ -18,8 +18,8 @@ public class ThreadLocalFilter implements Filter {
 	private ServletContext context;
 
 	@Override
-	public void init(FilterConfig config) {
-		context = config.getServletContext();
+	public void init(FilterConfig conf) {
+		context = conf.getServletContext();
 	}
 
 	@Override

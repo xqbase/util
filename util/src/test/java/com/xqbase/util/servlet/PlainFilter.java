@@ -1,8 +1,17 @@
 package com.xqbase.util.servlet;
 
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebInitParam;
+import java.util.Collections;
 
-@WebFilter(urlPatterns="/plain/*", initParams=@WebInitParam(name="request.1",
-		value="com.xqbase.util.servlet.ForwardedWrapper"))
-public class PlainFilter extends WrapperFilter {/**/}
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebFilter;
+
+@WebFilter("/plain/*")
+public class PlainFilter extends ForwardedFilter {
+	@Override
+	public void init(FilterConfig conf) throws ServletException {
+		super.init(new SimpleFilterConfig(conf, Collections.
+				singletonMap(ForwardedFilter.class.getName() + ".trustedIPs",
+				"127.0.0.1")));
+	}
+}

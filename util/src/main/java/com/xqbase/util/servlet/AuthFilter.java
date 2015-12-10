@@ -20,13 +20,13 @@ public class AuthFilter implements Filter {
 	private boolean useSession;
 
 	@Override
-	public void init(FilterConfig config) {
-		auth = config.getInitParameter("auth");
+	public void init(FilterConfig conf) {
+		auth = conf.getInitParameter("auth");
 		if (auth != null) {
 			auth = Base64.getEncoder().encodeToString(auth.getBytes());
 		}
-		realm = config.getInitParameter("realm");
-		useSession = Conf.getBoolean(config.getInitParameter("session"), false);
+		realm = conf.getInitParameter("realm");
+		useSession = Conf.getBoolean(conf.getInitParameter("session"), false);
 	}
 
 	@Override

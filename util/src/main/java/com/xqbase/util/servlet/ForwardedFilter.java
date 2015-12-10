@@ -1,5 +1,6 @@
 package com.xqbase.util.servlet;
 
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
@@ -8,33 +9,44 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 
-import javax.servlet.ServletContext;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 
-public class ForwardedWrapper implements WrapperFactory {
+public class ForwardedFilter implements Filter {
 	private static final X509Certificate[] EMPTY_X509CERTS = {};
 
 	private HashSet<String> trustedIPs = new HashSet<>();
 
-	public ForwardedWrapper(ServletContext sc) {
-		for (String ip : sc.getInitParameter(ForwardedWrapper.
+	@Override
+	public void init(FilterConfig conf) throws ServletException {
+		for (String ip : conf.getInitParameter(ForwardedFilter.
 				class.getName() + ".trustedIPs").split(",")) {
 			trustedIPs.add(ip);
 		}
 	}
 
 	@Override
-	public HttpServletRequestWrapper getWrapper(HttpServletRequest req,
-			HttpServletResponse resp) {
-		if (!trustedIPs.contains(req.getRemoteAddr())) {
-			return null;
+	public void destroy() {/**/}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		if (!(request instanceof HttpServletRequest) ||
+				!trustedIPs.contains(request.getRemoteAddr())) {
+			chain.doFilter(request, response);
+			return;
 		}
 
+		HttpServletRequest req = (HttpServletRequest) request;
 		String forwardedFor = req.getHeader("X-Forwarded-For");
 		if (forwardedFor == null) {
 			forwardedFor = req.getRemoteAddr();
@@ -82,7 +94,7 @@ public class ForwardedWrapper implements WrapperFactory {
 		}
 		String scheme = proto;
 		String remoteAddr = forwardedFor;
-		return new HttpServletRequestWrapper(req) {
+		HttpServletRequestWrapper req_ = new HttpServletRequestWrapper(req) {
 			@Override
 			public String getScheme() {
 				return scheme;
@@ -108,5 +120,6 @@ public class ForwardedWrapper implements WrapperFactory {
 				return remoteAddr;
 			}
 		};
+		chain.doFilter(req_, response);
 	}
 }
