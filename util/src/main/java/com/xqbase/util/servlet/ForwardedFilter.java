@@ -28,8 +28,7 @@ public class ForwardedFilter implements Filter {
 
 	@Override
 	public void init(FilterConfig conf) throws ServletException {
-		for (String ip : conf.getInitParameter(ForwardedFilter.
-				class.getName() + ".trustedIPs").split(",")) {
+		for (String ip : conf.getInitParameter("trustedIPs").split(",")) {
 			trustedIPs.add(ip);
 		}
 	}

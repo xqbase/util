@@ -18,8 +18,8 @@ public class ThreadLocalFilter implements Filter {
 	private ServletContext context;
 
 	@Override
-	public void init(FilterConfig config) {
-		context = config.getServletContext();
+	public void init(FilterConfig conf) {
+		context = conf.getServletContext();
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ThreadLocalFilter implements Filter {
 					req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]";
 		} else {
 			servlets.request = null;
-			suffix = null;
+			suffix = " [" + request.getRemoteAddr() + "]";
 		}
 		servlets.response = response instanceof HttpServletResponse ?
 				(HttpServletResponse) response : null;

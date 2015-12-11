@@ -32,7 +32,8 @@ public class AuthFilter implements Filter {
 	@Override
 	public void destroy() {/**/}
 
-	private static final String AUTHED = AuthFilter.class.getName() + ".AUTHED";
+	private static final String AUTHORIZED =
+			AuthFilter.class.getName() + ".authorized";
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
@@ -52,7 +53,7 @@ public class AuthFilter implements Filter {
 		HttpSession session = null;
 		if (useSession) {
 			session = req.getSession();
-			if (session.getAttribute(AUTHED) != null) {
+			if (session.getAttribute(AUTHORIZED) != null) {
 				chain.doFilter(request, response);
 				return;
 			}
@@ -61,7 +62,7 @@ public class AuthFilter implements Filter {
 				authorization.toUpperCase().startsWith("BASIC ") &&
 				authorization.substring(6).equals(auth)) {
 			if (session != null) {
-				session.setAttribute(AUTHED, Boolean.TRUE);
+				session.setAttribute(AUTHORIZED, Boolean.TRUE);
 			}
 			chain.doFilter(request, response);
 		} else {

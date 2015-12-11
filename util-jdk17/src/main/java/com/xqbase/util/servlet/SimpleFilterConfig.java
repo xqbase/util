@@ -39,7 +39,7 @@ public class SimpleFilterConfig implements FilterConfig {
 	}
 
 	public SimpleFilterConfig(FilterConfig filterConfig) {
-		this(filterConfig, Collections.emptyMap());
+		this(filterConfig, Collections.<String, String>emptyMap());
 	}
 
 	@Override

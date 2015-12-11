@@ -40,7 +40,7 @@ public class ThreadLocalFilter implements Filter {
 					req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]";
 		} else {
 			servlets.request = null;
-			suffix = null;
+			suffix = " [" + request.getRemoteAddr() + "]";
 		}
 		servlets.response = response instanceof HttpServletResponse ?
 				(HttpServletResponse) response : null;

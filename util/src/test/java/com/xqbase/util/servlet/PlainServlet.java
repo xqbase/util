@@ -23,6 +23,7 @@ public class PlainServlet extends HttpServlet {
 		resp.setContentType("text/plain");
 		PrintWriter out = resp.getWriter();
 		ServletContext sc = getServletContext();
+		out.println(Listener.QUERY_ENCODING + "=" + req.getAttribute(Listener.QUERY_ENCODING));
 		out.println("effectiveSessionTrackingModes=" + sc.getEffectiveSessionTrackingModes());
 		out.println("defaultSessionTrackingModes=" + sc.getDefaultSessionTrackingModes());
 		out.println("sessionId=" + req.getSession(true).getId());

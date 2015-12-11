@@ -75,9 +75,6 @@ public class FastCGIServlet extends HttpServlet {
 	private static final int RESP_BODY = 1;
 	private static final int RESP_END = 2;
 
-	private static final IOException CLIENT_EXCEPTION = new IOException(FastCGIServlet.
-			class.getName() + ".CLIENT_EXCEPTION");
-
 	private static void write(OutputStream out, int type, byte[] b) throws IOException {
 		write(out, type, b, 0, b.length);
 	}
@@ -134,6 +131,10 @@ public class FastCGIServlet extends HttpServlet {
 			bytesLeft -= bytesRead;
 		}
 		return data;
+	}
+
+	static class ClientException extends Exception {
+		private static final long serialVersionUID = 1L;
 	}
 
 	private int timeout, maxRequests;
@@ -227,7 +228,7 @@ public class FastCGIServlet extends HttpServlet {
 					resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
 							"Chunked Request Not Supported");
 				} catch (IOException e) {/**/}
-				throw CLIENT_EXCEPTION;
+				throw new ClientException();
 			}
 			addPair(baq, "CONTENT_LENGTH", "" + contentLength);
 
@@ -276,7 +277,7 @@ public class FastCGIServlet extends HttpServlet {
 			try {
 				out = resp.getOutputStream();
 			} catch (IOException ee) {
-				throw CLIENT_EXCEPTION;
+				throw new ClientException();
 			}
 			int respStatus = RESP_HEADER;
 			StringBuilder sbOut = new StringBuilder();
@@ -295,7 +296,7 @@ public class FastCGIServlet extends HttpServlet {
 							out.write(data);
 							out.flush();
 						} catch (IOException ee) {
-							throw CLIENT_EXCEPTION;
+							throw new ClientException();
 						}
 						break;
 					}
@@ -324,7 +325,7 @@ public class FastCGIServlet extends HttpServlet {
 										getBytes(StandardCharsets.ISO_8859_1));
 								out.flush();
 							} catch (IOException ee) {
-								throw CLIENT_EXCEPTION;
+								throw new ClientException();
 							}
 						}
 					}
@@ -350,15 +351,15 @@ public class FastCGIServlet extends HttpServlet {
 			}
 
 			entry.expire = System.currentTimeMillis() + timeout;
+		} catch (ClientException e) {
+			entry.close();
 		} catch (IOException e) {
 			entry.close();
-			if (e != CLIENT_EXCEPTION) {
-				Log.w(entry.addr + " - " + e.getMessage());
-				try {
-					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
-				} catch (IOException e_) {/**/}
-				entry.destroy();
-			}
+			Log.w(entry.addr + " - " + e.getMessage());
+			try {
+				resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
+			} catch (IOException e_) {/**/}
+			entry.destroy();
 		} finally {
 			if (entry.command != null) {
 				entry.requests ++;

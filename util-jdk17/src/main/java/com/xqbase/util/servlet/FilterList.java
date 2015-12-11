@@ -36,19 +36,23 @@ public abstract class FilterList implements Filter {
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		Filter[] filters = filterMap.keySet().toArray(EMPTY_FILTERS);
+		final Filter[] filters = filterMap.keySet().toArray(EMPTY_FILTERS);
 		/* A Chain with 3 Filters Looks Like:
 		filters[0].doFilter(req, resp, (req_, resp_) -> {
 			filters[1].doFilter(req_, resp_, (req__, resp__) -> {
 				filters[2].doFilter(req_, resp_, chain);
 			});
 		}); */
-		FilterChain[] chains = new FilterChain[filters.length];
+		final FilterChain[] chains = new FilterChain[filters.length];
 		chains[filters.length - 1] = chain;
 		for (int i = filters.length - 2; i >= 0; i --) {
-			int i_ = i + 1;
-			chains[i] = (req_, resp_) -> {
-				filters[i_].doFilter(req_, resp_, chains[i_]); 
+			final int i_ = i + 1;
+			chains[i] = new FilterChain() {
+				@Override
+				public void doFilter(ServletRequest req_, ServletResponse resp_)
+						throws IOException, ServletException {
+					filters[i_].doFilter(req_, resp_, chains[i_]); 
+				}
 			};
 		}
 		filters[0].doFilter(req, resp, chains[0]);

@@ -12,26 +12,29 @@ import javax.servlet.ServletResponse;
 
 import com.xqbase.util.Log;
 
-public class SimpleFilter implements Filter {
+public class ChildFilter implements Filter {
 	private String filterName;
 
 	@Override
 	public void init(FilterConfig conf) {
-		StringBuilder sb = new StringBuilder(conf.getServletContext().
-				getServletContextName() + "/" + conf.getFilterName() + ":");
+		StringBuilder sb = new StringBuilder();
 		Enumeration<String> en = conf.getInitParameterNames();
 		while (en.hasMoreElements()) {
 			String name = en.nextElement();
-			sb.append(name + "=" + conf.getInitParameter(name) + ",");
+			sb.append("," + name + "=" + conf.getInitParameter(name));
 		}
-		filterName = sb.substring(0, sb.length() - 1);
+		filterName = conf.getFilterName() + " {" + sb.substring(1) + "}";
 	}
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		Log.i(filterName);
-		chain.doFilter(req, resp);
+		Log.i("Enter " + filterName);
+		try {
+			chain.doFilter(req, resp);
+		} finally {
+			Log.i("Leave " + filterName);
+		}
 	}
 
 	@Override

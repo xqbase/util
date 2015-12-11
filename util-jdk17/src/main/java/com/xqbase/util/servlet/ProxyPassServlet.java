@@ -57,8 +57,9 @@ public class ProxyPassServlet extends HttpServlet {
 		"X-Forwarded-Certificates",
 	};
 
-	private static final IOException CLIENT_EXCEPTION = new IOException(ProxyPassServlet.
-			class.getName() + ".CLIENT_EXCEPTION");
+	static class ClientException extends Exception {
+		private static final long serialVersionUID = 1L;
+	}
 
 	private String basePath, redirect;
 	private SocketPool pool;
@@ -120,7 +121,7 @@ public class ProxyPassServlet extends HttpServlet {
 	}
 
 	private static void copyResponse(InputStream inSocket, OutputStream outResp,
-			byte[] buffer, int length) throws IOException {
+			byte[] buffer, int length) throws ClientException, IOException {
 		int bytesToRead = length;
 		while (bytesToRead > 0) {
 			int bytesRead = inSocket.read(buffer, 0,
@@ -137,7 +138,7 @@ public class ProxyPassServlet extends HttpServlet {
 			} catch (IOException e) {
 				// Close if too much left
 				if (bytesToRead > RESP_MAX_SIZE) {
-					throw CLIENT_EXCEPTION;
+					throw new ClientException();
 				}
 			}
 		}
@@ -207,7 +208,7 @@ public class ProxyPassServlet extends HttpServlet {
 				writeHeader(outSocket, "Content-Length", "" + contentLength);
 				writeln(outSocket);
 				// Streams.copy(req.getInputStream(), outSocket);
-				// Should throw CLIENT_EXCEPTION when req.getInputStream() broken
+				// Should throw ClientException when req.getInputStream() broken
 				InputStream in = req.getInputStream();
 				byte[] buffer = new byte[REQ_MAX_SIZE];
 				while (true) {
@@ -215,7 +216,7 @@ public class ProxyPassServlet extends HttpServlet {
 					try {
 						bytesRead = in.read(buffer);
 					} catch (IOException e) {
-						throw CLIENT_EXCEPTION;
+						throw new ClientException();
 					}
 					if (bytesRead <= 0) {
 						break;
@@ -369,10 +370,9 @@ public class ProxyPassServlet extends HttpServlet {
 			}
 			socketEntry.setValid(!close);
 
+		} catch (ClientException e) {
+			// Ignored
 		} catch (IOException | GeneralSecurityException e) {
-			if (e == CLIENT_EXCEPTION) {
-				return;
-			}
 			try {
 				if (redirect == null) {
 					resp.sendError(HttpServletResponse.SC_BAD_GATEWAY);
