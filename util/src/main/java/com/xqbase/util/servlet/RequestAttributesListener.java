@@ -6,7 +6,7 @@ import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
 
 public class RequestAttributesListener implements ServletRequestListener {
-	protected static final String REQUEST_ATTRIBUTES =
+	public static final String REQUEST_ATTRIBUTES =
 			RequestAttributesListener.class.getName() + ".requestAttributes";
 
 	private volatile LinkedHashMap<String, String> attrMap = null;

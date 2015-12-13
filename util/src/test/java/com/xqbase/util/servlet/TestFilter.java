@@ -12,7 +12,7 @@ import javax.servlet.ServletResponse;
 
 import com.xqbase.util.Log;
 
-public class ChildFilter implements Filter {
+public class TestFilter implements Filter {
 	private String filterName;
 
 	@Override
@@ -23,7 +23,8 @@ public class ChildFilter implements Filter {
 			String name = en.nextElement();
 			sb.append("," + name + "=" + conf.getInitParameter(name));
 		}
-		filterName = conf.getFilterName() + " {" + sb.substring(1) + "}";
+		filterName = conf.getFilterName() + (sb.length() == 0 ? " {}" :
+				" {" + sb.substring(1) + "}");
 	}
 
 	@Override

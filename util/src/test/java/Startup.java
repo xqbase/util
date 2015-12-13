@@ -49,4 +49,39 @@ public class Startup {
 			Log.e(e);
 		}
 	}
+/*
+	public static void main(String[] args) throws Exception {
+		Conf.chdir("../src/test/webapp/WEB-INF");
+
+		Server server = new Server();
+		ServerConnector connector = new ServerConnector(server);
+		connector.setPort(80);
+		server.addConnector(connector);
+
+		SslContextFactory ssl = new SslContextFactory();
+		ssl.setKeyStoreType("PKCS12");
+		ssl.setKeyStorePath(Conf.getAbsolutePath("conf/localhost.pfx"));
+		ssl.setKeyStorePassword("changeit");
+		ssl.setTrustStoreType("JKS");
+		ssl.setTrustStorePath(Conf.getAbsolutePath("conf/localhost.jks"));
+		ssl.setTrustStorePassword("changeit");
+		ssl.setWantClientAuth(true);
+		connector = new ServerConnector(server, ssl);
+		connector.setPort(443);
+		server.addConnector(connector);
+
+		WebAppContext context = new WebAppContext(Conf.getAbsolutePath(".."), "/");
+		context.getMetaData().setWebInfClassesDirs(Collections.
+				singletonList(Resource.newResource(Conf.
+				getAbsolutePath("../../../../target/test-classes"))));
+		context.setConfigurations(new Configuration[] {
+			new AnnotationConfiguration(),
+			new WebInfConfiguration(),
+			new WebXmlConfiguration(),
+		});
+        server.setHandler(context);
+		server.start();
+		server.join();
+	}
+*/
 }

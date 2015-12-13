@@ -7,14 +7,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.servlet.ServletContext;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(urlPatterns="/plain/*")
-public class PlainServlet extends HttpServlet {
+public class TestServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Override
@@ -23,7 +21,7 @@ public class PlainServlet extends HttpServlet {
 		resp.setContentType("text/plain");
 		PrintWriter out = resp.getWriter();
 		ServletContext sc = getServletContext();
-		out.println(Listener.QUERY_ENCODING + "=" + req.getAttribute(Listener.QUERY_ENCODING));
+		out.println(TestListener.QUERY_ENCODING + "=" + req.getAttribute(TestListener.QUERY_ENCODING));
 		out.println("effectiveSessionTrackingModes=" + sc.getEffectiveSessionTrackingModes());
 		out.println("defaultSessionTrackingModes=" + sc.getDefaultSessionTrackingModes());
 		out.println("sessionId=" + req.getSession(true).getId());

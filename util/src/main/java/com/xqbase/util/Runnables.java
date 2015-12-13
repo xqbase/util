@@ -26,8 +26,8 @@ public class Runnables {
  	 * <li>Count number of <b>branch thread</b>s</li>
  	 * </ul>
  	 *
- 	 * @see {@link Log#suffix}
- 	 * @see {@link Log#throwable}
+ 	 * @see Log#suffix
+ 	 * @see Log#throwable
 	 */
 	public static Runnable wrap(Runnable runnable) {
 		String suffix = Log.suffix.get();
@@ -52,7 +52,7 @@ public class Runnables {
 	/**
 	 * Wrap a {@link Callable}
 	 *
- 	 * @see {@link #wrap(Runnable)}
+ 	 * @see #wrap(Runnable)
 	 */
 	public static <V> Callable<V> wrap(Callable<V> callable) {
 		String suffix = Log.suffix.get();

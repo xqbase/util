@@ -18,6 +18,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -124,7 +125,8 @@ public class ScriptServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest request,
 			HttpServletResponse response) throws IOException, ServletException {
-		Object servletPath = request.getAttribute("javax.servlet.include.servlet_path");
+		Object servletPath = request.
+				getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
 		String filename = servletPath instanceof String ?
 				(String) servletPath : request.getServletPath();
 		SimpleScriptContext context = new SimpleScriptContext();

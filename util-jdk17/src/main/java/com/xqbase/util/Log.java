@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * <li>Log.v/d/i/w/e(Throwable throwable)</li>
  * <li>Log.v/d/i/w/e(String message, Throwable throwable)</li>
  * </ul>
- * logging into a {@link java.util.logging.Logger}
+ * logging into a {@link Logger}
  */
 public class Log {
 	/**
@@ -39,7 +39,7 @@ public class Log {
 	 * Set a new logger and get the original one
 	 *
 	 * @return the original logger
-	 * @see {@link Logger}
+	 * @see Logger
 	 */
 	public static Logger getAndSet(Logger logger) {
 		return logger_.getAndSet(logger);

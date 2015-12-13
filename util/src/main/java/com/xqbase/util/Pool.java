@@ -15,7 +15,7 @@ import com.xqbase.util.function.SupplierEx;
  * A pooled object is controlled by its pool entry. When an entry closed,
  * the pooled object is either returned to the pool or destroyed, e.g.
  * <pre><code>
- *	try (Pool<Socket>.Entry entry = pool.borrow()) {
+ *	try (Pool&lt;Socket&gt;.Entry entry = pool.borrow()) {
  *		Socket socket = entry.getObject();
  *		// use the socket
  *		...
@@ -66,7 +66,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		/**
 		 * Validate or invalidate the entry
 		 *
-		 * @see {@link #close()}
+		 * @see #close()
 		 */
 		public void setValid(boolean valid) {
 			this.valid = valid;
@@ -174,7 +174,8 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	}
 
 	/**
-	 * Reopen the pool.</p>
+	 * Reopen the pool.<p>
+	 *
 	 * Closing of an entry (must be valid) will return its pooled object
 	 * into the reopened pool.
 	 */
@@ -183,7 +184,8 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	}
 
 	/**
-	 * Close the pool.</p>
+	 * Close the pool.<p>
+	 *
 	 * Closing of an entry (must be valid) will destroy its pooled object
 	 * if the pool is closed.
 	 */
