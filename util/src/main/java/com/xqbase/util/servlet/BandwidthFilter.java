@@ -2,9 +2,6 @@ package com.xqbase.util.servlet;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -13,8 +10,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.ServletResponseWrapper;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import com.xqbase.util.Numbers;
 import com.xqbase.util.Time;
@@ -98,52 +97,57 @@ class BandwidthOutputStream extends ServletOutputStream {
 	}
 }
 
-class ResponseHandler implements InvocationHandler {
-	private static LockMap<String> lockMap = new LockMap<>(true);
-
+class BandwidthWrapper implements Closeable {
 	private BandwidthOutputStream out = null;
 	private CountLock lock = null;
 	private ServletResponse resp;
 	private String ip;
 	private int limit;
 
-	ResponseHandler(ServletRequest req, ServletResponse resp, int limit) {
-		ip = req.getRemoteAddr();
+	BandwidthWrapper(ServletResponse resp, String ip, int limit) {
 		this.resp = resp;
+		this.ip = ip;
 		this.limit = limit;
 	}
 
-	@Override
-	public Object invoke(Object proxy, Method method, Object[] args)
-			throws Throwable {
-		switch (method.getName()) {
-		case "getOutputStream":
-			if (out != null) {
-				return out;
-			}
-			ServletOutputStream out_ = resp.getOutputStream();
-			// Throw before lock
-			lock = lockMap.acquire(ip);
-			out = new BandwidthOutputStream(out_, lock, limit);
+	ServletOutputStream getOutputStream_() throws IOException {
+		if (out != null) {
 			return out;
-		case "close":
-			if (out != null) {
-				lockMap.release(ip, lock);
+		}
+		ServletOutputStream out_ = resp.getOutputStream();
+		// Throw before lock
+		lock = BandwidthFilter.lockMap.acquire(ip);
+		out = new BandwidthOutputStream(out_, lock, limit);
+		return out;
+	}
+
+	ServletResponse getResponse() {
+		if (resp instanceof HttpServletResponse) {
+			return new HttpServletResponseWrapper((HttpServletResponse) resp) {
+				@Override
+				public ServletOutputStream getOutputStream() throws IOException {
+					return getOutputStream_();
+				}
+			};
+		}
+		return new ServletResponseWrapper(resp) {
+			@Override
+			public ServletOutputStream getOutputStream() throws IOException {
+				return getOutputStream_();
 			}
-			return null;
-		default:
-			return method.invoke(resp, args);
+		};
+	}
+
+	@Override
+	public void close() {
+		if (out != null) {
+			BandwidthFilter.lockMap.release(ip, lock);
 		}
 	}
 }
 
 public class BandwidthFilter implements Filter {
-	private static final Class<?>[] CLOSEABLE_SERVLET_RESPONSE_INTERFACES = {
-		Closeable.class, ServletResponse.class,
-	};
-	private static final Class<?>[] CLOSEABLE_HTTP_SERVLET_RESPONSE_INTERFACES = {
-		Closeable.class, HttpServletResponse.class,
-	};
+	static LockMap<String> lockMap = new LockMap<>(true);
 
 	private int limit;
 
@@ -159,18 +163,13 @@ public class BandwidthFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		if (limit <= 0) {
+		if (limit > 0) {
+			try (BandwidthWrapper wrapper =
+					new BandwidthWrapper(resp, req.getRemoteAddr(), limit)) {
+				chain.doFilter(req, wrapper.getResponse());
+			}
+		} else {
 			chain.doFilter(req, resp);
-			return;
-		}
-		try (Closeable resp_ =
-				(Closeable) Proxy.
-				newProxyInstance(BandwidthFilter.class.getClassLoader(),
-				resp instanceof HttpServletResponse ?
-				CLOSEABLE_HTTP_SERVLET_RESPONSE_INTERFACES :
-				CLOSEABLE_SERVLET_RESPONSE_INTERFACES,
-				new ResponseHandler(req, resp, limit))) {
-			chain.doFilter(req, (ServletResponse) resp_);
 		}
 	}
 }
