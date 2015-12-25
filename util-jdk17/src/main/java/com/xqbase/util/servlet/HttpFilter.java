@@ -11,19 +11,18 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@FunctionalInterface
-public interface HttpFilter extends Filter {
-	public void doFilter(HttpServletRequest req, HttpServletResponse resp,
+public abstract class HttpFilter implements Filter {
+	public abstract void doFilter(HttpServletRequest req, HttpServletResponse resp,
 			FilterChain chain) throws IOException, ServletException;
 
 	@Override
-	public default void init(FilterConfig conf) throws ServletException {/**/}
+	public void init(FilterConfig conf) throws ServletException {/**/}
 
 	@Override
-	public default void destroy() {/**/}
+	public void destroy() {/**/}
 
 	@Override
-	public default void doFilter(ServletRequest req, ServletResponse resp,
+	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
 		if (req instanceof HttpServletRequest &&
 				resp instanceof HttpServletResponse) {

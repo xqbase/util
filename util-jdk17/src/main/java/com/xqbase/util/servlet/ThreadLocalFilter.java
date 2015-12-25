@@ -2,19 +2,16 @@ package com.xqbase.util.servlet;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Log;
 
-public class ThreadLocalFilter implements Filter {
+public class ThreadLocalFilter extends HttpFilter {
 	private ServletContext context;
 
 	@Override
@@ -23,31 +20,19 @@ public class ThreadLocalFilter implements Filter {
 	}
 
 	@Override
-	public void destroy() {/**/}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
+	public void doFilter(HttpServletRequest req, HttpServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
 		Servlets servlets = new Servlets();
 		servlets.context = context;
-		String suffix;
-		if (request instanceof HttpServletRequest) {
-			HttpServletRequest req = (HttpServletRequest) request;
-			servlets.request = req;
-			String query = req.getQueryString();
-			suffix = " [" + req.getRemoteAddr() + ", " + req.getRequestURL() +
-					(query == null || query.isEmpty() ? "" : "?" + query) + ", " +
-					req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]";
-		} else {
-			servlets.request = null;
-			suffix = " [" + request.getRemoteAddr() + "]";
-		}
-		servlets.response = response instanceof HttpServletResponse ?
-				(HttpServletResponse) response : null;
+		servlets.request = req;
+		servlets.response = resp;
 		Servlets.local.set(servlets);
-		Log.suffix.set(suffix);
+		String query = req.getQueryString();
+		Log.suffix.set(" [" + req.getRemoteAddr() + ", " + req.getRequestURL() +
+				(query == null || query.isEmpty() ? "" : "?" + query) + ", " +
+				req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]");
 		try {
-			chain.doFilter(request, response);
+			chain.doFilter(req, resp);
 		} finally {
 			Log.suffix.remove();
 			Servlets.local.remove();

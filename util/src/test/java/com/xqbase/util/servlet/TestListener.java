@@ -30,14 +30,17 @@ public class TestListener implements ServletContextListener {
 		sc.addListener(new RequestAttributesListener());
 
 		FilterRegistration.Dynamic filterReg;
-		filterReg = sc.addFilter("Pre-ThreadLocal", new TestFilter());
+		filterReg = sc.addFilter("First", new TestFilter());
 		filterReg.addMappingForUrlPatterns(all, false, "/*");
 		filterReg = sc.addFilter("ThreadLocal", new ThreadLocalFilter());
 		filterReg.addMappingForUrlPatterns(all, false, "/*");
 		filterReg = sc.addFilter("Bandwidth", new BandwidthFilter());
 		filterReg.setInitParameter("limit", "1024");
 		filterReg.addMappingForUrlPatterns(all, false, "/*");
-		filterReg = sc.addFilter("Post-ThreadLocal", new TestFilter());
+		filterReg = sc.addFilter("ErrorPage", new ErrorPageFilter());
+		filterReg.setInitParameter("404", "https://github.com/xqbase/util");
+		filterReg.addMappingForUrlPatterns(all, false, "/*");
+		filterReg = sc.addFilter("Last", new TestFilter());
 		filterReg.setInitParameter("key", "value");
 		filterReg.addMappingForUrlPatterns(all, false, "/*");
 		filterReg = sc.addFilter("Forwarded", new ForwardedFilter());

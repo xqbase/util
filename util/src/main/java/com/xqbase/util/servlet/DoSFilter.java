@@ -27,6 +27,9 @@ public class DoSFilter implements Filter {
 	}
 
 	@Override
+	public void destroy() {/**/}
+
+	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
 		long now = System.currentTimeMillis();
@@ -42,10 +45,10 @@ public class DoSFilter implements Filter {
 			chain.doFilter(req, resp);
 		} else {
 			Log.w("DoS Attack (" + count + ")");
-			((HttpServletResponse) resp).sendError(HttpServletResponse.SC_FORBIDDEN);
+			if (resp instanceof HttpServletResponse) {
+				((HttpServletResponse) resp).
+						sendError(HttpServletResponse.SC_FORBIDDEN);
+			}
 		}
 	}
-
-	@Override
-	public void destroy() {/**/}
 }

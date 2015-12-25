@@ -8,20 +8,18 @@ import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Base64;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 
-public class ForwardedFilter implements Filter {
+public class ForwardedFilter extends HttpFilter {
 	private static final X509Certificate[] EMPTY_X509CERTS = {};
 
 	private HashSet<String> trustedIPs = new HashSet<>();
@@ -34,18 +32,13 @@ public class ForwardedFilter implements Filter {
 	}
 
 	@Override
-	public void destroy() {/**/}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
+	public void doFilter(HttpServletRequest req, HttpServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		if (!(request instanceof HttpServletRequest) ||
-				!trustedIPs.contains(request.getRemoteAddr())) {
-			chain.doFilter(request, response);
+		if (!trustedIPs.contains(req.getRemoteAddr())) {
+			chain.doFilter(req, resp);
 			return;
 		}
 
-		HttpServletRequest req = (HttpServletRequest) request;
 		String forwardedFor = req.getHeader("X-Forwarded-For");
 		if (forwardedFor == null) {
 			forwardedFor = req.getRemoteAddr();
@@ -119,6 +112,6 @@ public class ForwardedFilter implements Filter {
 				return remoteAddr;
 			}
 		};
-		chain.doFilter(req_, response);
+		chain.doFilter(req_, resp);
 	}
 }

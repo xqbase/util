@@ -2,12 +2,9 @@ package com.xqbase.util.servlet;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -15,7 +12,7 @@ import javax.servlet.http.HttpSession;
 import com.xqbase.util.Base64;
 import com.xqbase.util.Conf;
 
-public class AuthFilter implements Filter {
+public class AuthFilter extends HttpFilter {
 	private String auth, realm;
 	private boolean useSession;
 
@@ -29,32 +26,22 @@ public class AuthFilter implements Filter {
 		useSession = Conf.getBoolean(conf.getInitParameter("session"), false);
 	}
 
-	@Override
-	public void destroy() {/**/}
-
 	private static final String AUTHORIZED =
 			AuthFilter.class.getName() + ".authorized";
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
+	public void doFilter(HttpServletRequest req, HttpServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		if (!(request instanceof HttpServletRequest) ||
-				!(response instanceof HttpServletResponse)) {
-			chain.doFilter(request, response);
-			return;
-		}
-		HttpServletRequest req = (HttpServletRequest) request;
-		HttpServletResponse resp = (HttpServletResponse) response;
 		String authorization = req.getHeader("Authorization");
 		if (auth == null) {
-			chain.doFilter(request, response);
+			chain.doFilter(req, resp);
 			return;
 		}
 		HttpSession session = null;
 		if (useSession) {
 			session = req.getSession();
 			if (session.getAttribute(AUTHORIZED) != null) {
-				chain.doFilter(request, response);
+				chain.doFilter(req, resp);
 				return;
 			}
 		}
@@ -64,7 +51,7 @@ public class AuthFilter implements Filter {
 			if (session != null) {
 				session.setAttribute(AUTHORIZED, Boolean.TRUE);
 			}
-			chain.doFilter(request, response);
+			chain.doFilter(req, resp);
 		} else {
 			resp.setHeader("WWW-Authenticate", realm == null ? "Basic" :
 					"Basic realm=\"" + realm + "\"");
