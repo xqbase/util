@@ -30,6 +30,7 @@ public class Startup {
 		sslConnector.setProperty("truststoreFile",
 				Conf.getAbsolutePath("conf/localhost.jks"));
 		sslConnector.setProperty("sslEnabledProtocols", "SSLv2Hello,TLSv1,TLSv1.1,TLSv1.2");
+
 		Tomcat tomcat = new Tomcat();
 		tomcat.setPort(80);
 		tomcat.getService().addConnector(connector);
@@ -38,8 +39,8 @@ public class Startup {
 		try {
 			Context ctx = tomcat.addWebapp("", Conf.getAbsolutePath(".."));
 			WebResourceRoot resources = new StandardRoot(ctx);
-			resources.addPreResources(new DirResourceSet(resources,
-					"/WEB-INF/classes", Conf.getAbsolutePath("../../../../target/test-classes"), "/"));
+			resources.addPreResources(new DirResourceSet(resources, "/WEB-INF/classes",
+					Conf.getAbsolutePath("../../../../target/test-classes"), "/"));
 			ctx.setResources(resources);
 			tomcat.start();
 			Thread.currentThread().join();
