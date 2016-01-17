@@ -12,7 +12,7 @@ import com.xqbase.util.function.SupplierEx;
 public class Lazy<T, E extends Exception> implements AutoCloseable {
 	private SupplierEx<? extends T, ? extends E> initializer;
 	private ConsumerEx<? super T, ?> finalizer;
-	private volatile T instance = null;
+	private volatile T object = null;
 
 	/**
 	 * Create a lazy factory by the given initializer and finalizer.
@@ -33,14 +33,18 @@ public class Lazy<T, E extends Exception> implements AutoCloseable {
 	 * @throws E exception thrown by initializer
 	 */
 	public T get() throws E {
-		if (instance == null) {
+		// use a temporary variable to reduce the number of reads of the volatile field
+		// see commons-lang3
+		T result = object;
+		if (object == null) {
 			synchronized (this) {
-				if (instance == null) {
-					instance = initializer.get();
+				result = object;
+				if (object == null) {
+					object = result = initializer.get();
 				}
 			}
 		}
-		return instance;
+		return result;
 	}
 
 	/**
@@ -49,11 +53,11 @@ public class Lazy<T, E extends Exception> implements AutoCloseable {
 	@Override
 	public void close() {
 		synchronized (this) {
-			if (instance != null) {
-				T instance_ = instance;
-				instance = null;
+			if (object != null) {
+				T object_ = object;
+				object = null;
 				try {
-					finalizer.accept(instance_);
+					finalizer.accept(object_);
 				} catch (Exception e) {
 					// Ignored
 				}
