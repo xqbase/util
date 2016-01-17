@@ -52,9 +52,9 @@ public class HttpForm {
 	private static final byte[] CONTENT_TYPE =
 			"Content-Type: ".getBytes();
 
-	private String encode(String s) {
+	private byte[] encode(String s) {
 		try {
-			return URLEncoder.encode(s, charset.name());
+			return URLEncoder.encode(s, charset.name()).getBytes();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -70,7 +70,7 @@ public class HttpForm {
 			body.add(AMP);
 		}
 		appended = true;
-		body.add(encode(name).getBytes()).add(EQ).add(encode(value).getBytes());
+		body.add(encode(name)).add(EQ).add(encode(value));
 	}
 
 	public void next(String name, String fileName, String contentType) {
