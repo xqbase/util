@@ -13,6 +13,10 @@ public class Strings {
 		return s == null || s.trim().isEmpty();
 	}
 
+	public static String truncate(String s, int len) {
+		return s == null ? "" : s.length() > len ? s.substring(0, len) : s;
+	}
+
 	public static String join(String separator, String... elements) {
 		StringBuilder sb = new StringBuilder();
 		for (String element : elements) {
