@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Log;
+import com.xqbase.util.Strings;
 
 public class ThreadLocalFilter extends HttpFilter {
 	private ServletContext context;
@@ -29,7 +30,7 @@ public class ThreadLocalFilter extends HttpFilter {
 		Servlets.local.set(servlets);
 		String query = req.getQueryString();
 		Log.suffix.set(" [" + req.getRemoteAddr() + ", " + req.getRequestURL() +
-				(query == null || query.isEmpty() ? "" : "?" + query) + ", " +
+				(Strings.isEmpty(query) ? "" : "?" + query) + ", " +
 				req.getHeader("Referer") + ", " + req.getHeader("User-Agent") + "]");
 		try {
 			chain.doFilter(req, resp);

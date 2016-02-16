@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Numbers;
+import com.xqbase.util.Strings;
 
 public class HostFilter implements HttpFilter {
 	private HashMap<String, String> map = new HashMap<>(),
@@ -43,7 +44,7 @@ public class HostFilter implements HttpFilter {
 		}
 		String query = req.getQueryString();
 		String suffix = (path == null ? "" : path) +
-				(query == null || query.isEmpty() ? "" : "?" + query);
+				(Strings.isEmpty(query) ? "" : "?" + query);
 		String host = req.getServerName();
 		// Full match first, then wildcard, finally default ("_") 
 		prefix = map.get(host);
@@ -58,7 +59,7 @@ public class HostFilter implements HttpFilter {
 		if (prefix == null) {
 			prefix = map.get("_");
 		}
-		if (prefix == null || prefix.isEmpty()) {
+		if (Strings.isEmpty(prefix)) {
 			chain.doFilter(req, resp);
 		} else if (prefix.startsWith("forward:")) {
 			req.getRequestDispatcher(prefix.substring(8) +

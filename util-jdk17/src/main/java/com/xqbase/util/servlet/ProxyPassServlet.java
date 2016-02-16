@@ -27,6 +27,7 @@ import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
 import com.xqbase.util.Streams;
+import com.xqbase.util.Strings;
 
 public class ProxyPassServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -148,7 +149,7 @@ public class ProxyPassServlet extends HttpServlet {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) {
 		String query = req.getQueryString();
 		String fullPath = basePath + req.getPathInfo() +
-				(query == null || query.isEmpty() ? "" : "?" + query);
+				(Strings.isEmpty(query) ? "" : "?" + query);
 		String method = req.getMethod();
 
 		try (SocketPool.Entry socketEntry = pool.borrow()) {
