@@ -31,22 +31,16 @@ public class Strings {
 	}
 
 	public static String encodeUrl(String s) {
-		if (s == null) {
-			return "";
-		}
 		try {
-			return URLEncoder.encode(s, "UTF-8");
+			return s == null ? "" : URLEncoder.encode(s, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public static String decodeUrl(String s) {
-		if (s == null) {
-			return "";
-		}
 		try {
-			return URLDecoder.decode(s, "UTF-8");
+			return s == null ? "" : URLDecoder.decode(s, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
