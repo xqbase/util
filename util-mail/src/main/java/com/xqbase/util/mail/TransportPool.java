@@ -64,7 +64,7 @@ public class TransportPool extends Pool<Transport, MessagingException> {
 			}
 		} else {
 			if (htmlText == null) {
-				part.setContent(plainText, "text/plain; charset=utf-8");
+				part.setText(plainText, "utf-8");
 			} else {
 				MimeMultipart multipart = new MimeMultipart();
 				multipart.setSubType("alternative");
@@ -92,7 +92,7 @@ public class TransportPool extends Pool<Transport, MessagingException> {
 		if (replyTo != null) {
 			message.setReplyTo(new Address[] {new InternetAddress(replyTo)});
 		}
-		message.setSubject(subject);
+		message.setSubject(subject, "utf-8");
 		message.setHeader("X-Priority", "" + priority);
 		if (attachments.length == 0) {
 			setText(message, plainText, htmlText);
