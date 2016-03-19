@@ -4,6 +4,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import com.xqbase.util.function.RunnableEx;
 
@@ -76,8 +77,13 @@ public class Runnables {
 		};
 	}
 
+	@SuppressWarnings("unchecked")
+	private static <T, U extends T> U cast(T o) {
+		return (U) o;
+	}
+
 	public static <E extends Exception> void retry(RunnableEx<E> runnable,
-			int count, int interval) throws E {
+			Consumer<E> handler, int count, int interval) throws E {
 		for (int i = 0; i < count; i ++) {
 			try {
 				runnable.run();
@@ -86,7 +92,10 @@ public class Runnables {
 				if (e instanceof RuntimeException) {
 					throw e;
 				}
-				Time.sleep(interval);
+				handler.accept(cast(e));
+				if (interval > 0) {
+					Time.sleep(interval);
+				}
 			}
 		}
 		runnable.run();
