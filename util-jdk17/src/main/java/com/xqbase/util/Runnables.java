@@ -5,6 +5,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.xqbase.util.function.RunnableEx;
+
 public class Runnables {
 	static AtomicInteger threadNum = new AtomicInteger(0);
 
@@ -78,6 +80,22 @@ public class Runnables {
 				}
 			}
 		};
+	}
+
+	public static <E extends Exception> void retry(RunnableEx<E> runnable,
+			int count, int interval) throws E {
+		for (int i = 0; i < count; i ++) {
+			try {
+				runnable.run();
+				return;
+			} catch (Exception e) {
+				if (e instanceof RuntimeException) {
+					throw e;
+				}
+				Time.sleep(interval);
+			}
+		}
+		runnable.run();
 	}
 
 	private static void awaitTermination(ExecutorService service) {
