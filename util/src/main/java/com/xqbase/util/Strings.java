@@ -41,6 +41,8 @@ public class Strings {
 	public static String decodeUrl(String s) {
 		try {
 			return s == null ? "" : URLDecoder.decode(s, "UTF-8");
+		} catch (IllegalArgumentException e) {
+			return "";
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
