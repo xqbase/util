@@ -8,12 +8,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Properties;
 
 import com.xqbase.util.ByteArrayQueue;
-import com.xqbase.util.Log;
 import com.xqbase.util.Pool;
 import com.xqbase.util.Streams;
 import com.xqbase.util.function.ConsumerEx;
@@ -86,9 +84,6 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 						}
 					}
 				}
-			} catch (SQLWarning e) {
-				Log.i(e.getMessage());
-				numRows = 0;
 			} catch (SQLIntegrityConstraintViolationException e) {
 				// Log.i(e.getMessage());
 				numRows = -1;

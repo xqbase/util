@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.xqbase</groupId>
 	<artifactId>xqbase-util</artifactId>
-	<version>0.2.9</version>
+	<version>0.2.10</version>
 	<packaging>jar</packaging>
 	<name>XQBase Util</name>
 	<description>Reusable Java components for www.xqbase.com</description>

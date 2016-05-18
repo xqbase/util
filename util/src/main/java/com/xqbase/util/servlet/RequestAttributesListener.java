@@ -25,8 +25,7 @@ public class RequestAttributesListener implements ServletRequestListener {
 			if (requestAttributes == null) {
 				return;
 			}
-			String[] ss = requestAttributes.split(",");
-			for (String s : ss) {
+			for (String s : requestAttributes.split(",")) {
 				int eq = s.indexOf('=');
 				if (eq >= 0) {
 					attrMap.put(s.substring(0, eq), s.substring(eq + 1));
