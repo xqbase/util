@@ -16,7 +16,7 @@ import com.xqbase.util.Pool;
 import com.xqbase.util.Streams;
 import com.xqbase.util.function.ConsumerEx;
 
-class SingleRowException extends Exception {
+class OneRowException extends Exception {
 	private static final long serialVersionUID = 1L;
 }
 
@@ -107,9 +107,9 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		try {
 			queryEx(row -> {
 				row_[0] = row;
-				throw new SingleRowException();
+				throw new OneRowException();
 			}, sql, in);
-		} catch (SingleRowException e) {/**/}
+		} catch (OneRowException e) {/**/}
 		return row_[0];
 	}
 
