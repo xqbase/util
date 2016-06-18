@@ -18,23 +18,30 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
+import com.xqbase.util.Strings;
 
 public class ForwardedFilter implements HttpFilter {
 	private static final X509Certificate[] EMPTY_X509CERTS = {};
 
-	private HashSet<String> trustedIPs = new HashSet<>();
+	private HashSet<String> trustedIPs;
 
 	@Override
-	public void init(FilterConfig conf) {
-		for (String ip : conf.getInitParameter("trustedIPs").split(",")) {
-			trustedIPs.add(ip);
+	public void init(FilterConfig conf) throws ServletException {
+		String trustedIPs_ = conf.getInitParameter("trustedIPs");
+		if (Strings.isEmpty(trustedIPs_)) {
+			trustedIPs = null;
+		} else {
+			trustedIPs = new HashSet<>();
+			for (String ip : trustedIPs_.split(",")) {
+				trustedIPs.add(ip);
+			}
 		}
 	}
 
 	@Override
 	public void doFilter(HttpServletRequest req, HttpServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
-		if (!trustedIPs.contains(req.getRemoteAddr())) {
+		if (trustedIPs != null && !trustedIPs.contains(req.getRemoteAddr())) {
 			chain.doFilter(req, resp);
 			return;
 		}
