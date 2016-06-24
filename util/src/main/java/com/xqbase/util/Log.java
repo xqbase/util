@@ -100,34 +100,34 @@ public class Log {
 				x == null ? s : s + x, t == null ? null : concat(t));
 	}
 
-	/** Log a VERBOSE/FINE message */
+	/** Log a VERBOSE/FINEST message */
 	public static void v(String s) {
+		log(Level.FINEST, s, null);
+	}
+
+	/** Log a VERBOSE/FINEST exception */
+	public static void v(Throwable t) {
+		log(Level.FINEST, "", t);
+	}
+
+	/** Log a VERBOSE/FINEST message and the exception */
+	public static void v(String s, Throwable t) {
+		log(Level.FINEST, s, t);
+	}
+
+	/** Log a DEBUG/FINE message */
+	public static void d(String s) {
 		log(Level.FINE, s, null);
 	}
 
-	/** Log a VERBOSE/FINE exception */
-	public static void v(Throwable t) {
+	/** Log a DEBUG/FINE exception */
+	public static void d(Throwable t) {
 		log(Level.FINE, "", t);
 	}
 
-	/** Log a VERBOSE/FINE message and the exception */
-	public static void v(String s, Throwable t) {
-		log(Level.FINE, s, t);
-	}
-
-	/** Log a DEBUG/CONFIG message */
-	public static void d(String s) {
-		log(Level.CONFIG, s, null);
-	}
-
-	/** Log a DEBUG/CONFIG exception */
-	public static void d(Throwable t) {
-		log(Level.CONFIG, "", t);
-	}
-
-	/** Log a DEBUG/CONFIG message and the exception*/
+	/** Log a DEBUG/FINE message and the exception*/
 	public static void d(String s, Throwable t) {
-		log(Level.CONFIG, s, t);
+		log(Level.FINE, s, t);
 	}
 
 	/** Log an INFO message */
