@@ -1,7 +1,10 @@
 package com.xqbase.util.servlet;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -13,11 +16,22 @@ import javax.servlet.SessionTrackingMode;
 import javax.servlet.annotation.WebListener;
 
 import com.xqbase.util.Log;
+import com.xqbase.util.Runnables;
 
 @WebListener
 public class TestListener implements ServletContextListener {
 	public static final String QUERY_ENCODING =
 			"org.eclipse.jetty.server.Request.queryEncoding";
+
+	private static void schedule() {
+		try {
+			throw new IOException("Test");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private ScheduledThreadPoolExecutor timer;
 
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
@@ -55,11 +69,17 @@ public class TestListener implements ServletContextListener {
 		servletReg.setInitParameter("timeout", "15000");
 		servletReg.addMapping("/secure/*");
 
+		timer = new ScheduledThreadPoolExecutor(1);
+		timer.scheduleAtFixedRate(Runnables.wrap(() -> {
+			schedule();
+		}), 0, 10, TimeUnit.SECONDS);
+
 		Log.i(sc.getServletContextName() + " Started");
 	}
 
 	@Override
 	public void contextDestroyed(ServletContextEvent event) {
+		Runnables.shutdown(timer);
 		Log.i(event.getServletContext().getServletContextName() + " Stopped");
 	}
 }

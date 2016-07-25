@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -19,11 +20,16 @@ public class ServiceListener implements ServletContextListener {
 	private static final String[] START_ARGS = {};
 	private static final String[] STOP_ARGS = {"stop"};
 
-	private ArrayList<Class<?>> classes;
-	private ExecutorService executor;
+	private static AtomicInteger count = new AtomicInteger(0);
+	private static ArrayList<Class<?>> classes;
+	private static ExecutorService executor;
 
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
+		if (count.getAndIncrement() > 0) {
+			return;
+		}
+
 		classes = new ArrayList<>();
 		executor = Executors.newCachedThreadPool();
 		ServletContext context = event.getServletContext();
@@ -53,6 +59,10 @@ public class ServiceListener implements ServletContextListener {
 
 	@Override
 	public void contextDestroyed(ServletContextEvent event) {
+		if (count.decrementAndGet() > 0) {
+			return;
+		}
+
 		ServletContext context = event.getServletContext();
 		for (int i = classes.size() - 1; i >= 0; i --) {
 			try {

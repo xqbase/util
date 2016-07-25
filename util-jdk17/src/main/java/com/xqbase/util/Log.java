@@ -49,6 +49,9 @@ public class Log {
 	private static final HashSet<String> THREAD_CLASSES = new HashSet<>(Arrays.
 			asList("java.lang.Thread",
 			"java.util.concurrent.ThreadPoolExecutor",
+			"java.util.concurrent.ScheduledThreadPoolExecutor",
+			"java.util.concurrent.FutureTask",
+			"java.util.concurrent.Executors",
 			"com.xqbase.util.Runnables"));
 
 	private static void concat(ArrayList<StackTraceElement> stes, Throwable t) {
