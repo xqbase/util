@@ -113,6 +113,7 @@ public class ByteArrayQueue implements Cloneable {
 		return this;
 	}
 
+	/** Adds one byte into the tail of the queue. */
 	public ByteArrayQueue add(int b) {
 		int newLength = addLength(1);
 		array[offset + length] = (byte) b;
@@ -167,6 +168,7 @@ public class ByteArrayQueue implements Cloneable {
 		return this;
 	}
 
+	/** Retrieves one byte from the head of the queue. */
 	public int remove() {
 		int b = array[offset] & 0xFF;
 		remove(1);
