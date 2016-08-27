@@ -37,21 +37,20 @@ public class ServiceListener implements ServletContextListener {
 		if (services == null) {
 			return;
 		}
-		for (String s : services.split(",")) {
+		for (final String s : services.split(",")) {
 			try {
 				Class<?> clazz = Class.forName(s);
 				final Method method = clazz.getMethod("main", String[].class);
 				classes.add(clazz);
-				final String s_ = s;
 				executor.execute(new Runnable() {
 					@Override
 					public void run() {
 						try {
 							method.invoke(null, (Object) START_ARGS);
 						} catch (InvocationTargetException e) {
-							context.log(s_, e.getTargetException());
+							context.log(s, e.getTargetException());
 						} catch (ReflectiveOperationException e) {
-							context.log(s_ + ": " + e.getMessage());
+							context.log(s + ": " + e.getMessage());
 						}
 					}
 				});
