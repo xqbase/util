@@ -7,23 +7,16 @@ import org.json.JSONObject;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Log;
-import com.xqbase.util.http.HttpPool;
+import com.xqbase.util.http.HttpUtil;
 
 public class TaobaoIp {
 	private static final String SERVICE_URL =
 			"http://ip.taobao.com/service/getIpInfo.php?ip=";
 
-	// Taobao IP' server keeps alive for only 5 seconds
-	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 1500);
-
-	public static HttpPool getHttpPool() {
-		return httpPool;
-	}
-
 	public static String getIpInfo(String ip) {
 		try {
 			ByteArrayQueue body = new ByteArrayQueue();
-			int status = httpPool.get(ip, null, body, null);
+			int status = HttpUtil.get(SERVICE_URL + ip, null, body, null, 30000);
 			if (status >= 400) {
 				Log.w(body.toString());
 				return null;
@@ -38,7 +31,7 @@ public class TaobaoIp {
 			return jo.optString("country") + "/" + jo.optString("region") +
 					"/" + jo.optString("city") + "/" + jo.optString("isp");
 		} catch (IOException | JSONException e) {
-			Log.e(e);
+			Log.w(e.getMessage());
 			return null;
 		}
 	}
