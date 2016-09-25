@@ -138,8 +138,9 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 				ps.setObject(i + 1, in[i]);
 			}
 			try (ResultSet rs = ps.executeQuery()) {
+				int columnCount = rs.getMetaData().getColumnCount();
 				while (rs.next()) {
-					consumer.accept(new Row(rs));
+					consumer.accept(new Row(rs, columnCount));
 				}
 			} catch (RuntimeException | SQLException e) {
 				throw e;

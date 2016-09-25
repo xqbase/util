@@ -8,9 +8,9 @@ import java.sql.SQLException;
 public class Row {
 	private Object[] data;
 
-	Row(ResultSet rs) throws SQLException {
-		data = new Object[rs.getMetaData().getColumnCount()];
-		for (int i = 0; i < data.length; i ++) {
+	Row(ResultSet rs, int columnCount) throws SQLException {
+		data = new Object[columnCount];
+		for (int i = 0; i < columnCount; i ++) {
 			Object o = rs.getObject(i + 1);
 			if (o instanceof Blob) {
 				Blob b = (Blob) o;
