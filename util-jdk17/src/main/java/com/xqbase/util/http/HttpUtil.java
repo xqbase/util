@@ -135,9 +135,9 @@ public class HttpUtil {
 		}
 		headerBaq.add(HEAD_END);
 
-		Streams.copy(headerBaq.getInputStream(), out);
+		out.write(headerBaq.array(), headerBaq.offset(), headerBaq.length());
 		if (requestBody != null) {
-			Streams.copy(requestBody.getInputStream(), out);
+			out.write(requestBody.array(), requestBody.offset(), requestBody.length());
 		}
 	}
 
@@ -322,7 +322,8 @@ public class HttpUtil {
 					add(proxyAuth.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		headerBaq.add(CRLF);
-		Streams.copy(headerBaq.getInputStream(), socket.getOutputStream());
+		socket.getOutputStream().write(headerBaq.array(),
+				headerBaq.offset(), headerBaq.length());
 		int status = recv(socket.getInputStream(), null, null, false, true, null);
 		if (status != 200) {
 			throw new IOException("HTTP/1.0 " + status + " Connection NOT established");
