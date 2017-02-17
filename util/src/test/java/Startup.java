@@ -25,10 +25,10 @@ public class Startup {
 		sslConnector.setAttribute("clientAuth", "want");
 		sslConnector.setProperty("keystoreType", "PKCS12");
 		sslConnector.setProperty("keystoreFile",
-				Conf.getAbsolutePath("../src/test/webapp/WEB-INF/conf/localhost.pfx"));
+				Conf.getAbsolutePath("test-classes/localhost.pfx"));
 		sslConnector.setProperty("truststoreType", "JKS");
 		sslConnector.setProperty("truststoreFile",
-				Conf.getAbsolutePath("../src/test/webapp/WEB-INF/conf/localhost.jks"));
+				Conf.getAbsolutePath("test-classes/localhost.jks"));
 		sslConnector.setProperty("sslEnabledProtocols", "SSLv2Hello,TLSv1,TLSv1.1,TLSv1.2");
 
 		Tomcat tomcat = new Tomcat();
