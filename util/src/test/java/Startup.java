@@ -14,7 +14,6 @@ import com.xqbase.util.Log;
 
 public class Startup {
 	public static void main(String[] args) {
-		Conf.chdir("../src/test/webapp/WEB-INF");
 		Connector connector = new Connector();
 		connector.setPort(80);
 		Connector sslConnector = new Connector();
@@ -26,10 +25,10 @@ public class Startup {
 		sslConnector.setAttribute("clientAuth", "want");
 		sslConnector.setProperty("keystoreType", "PKCS12");
 		sslConnector.setProperty("keystoreFile",
-				Conf.getAbsolutePath("conf/localhost.pfx"));
+				Conf.getAbsolutePath("../src/test/webapp/WEB-INF/conf/localhost.pfx"));
 		sslConnector.setProperty("truststoreType", "JKS");
 		sslConnector.setProperty("truststoreFile",
-				Conf.getAbsolutePath("conf/localhost.jks"));
+				Conf.getAbsolutePath("../src/test/webapp/WEB-INF/conf/localhost.jks"));
 		sslConnector.setProperty("sslEnabledProtocols", "SSLv2Hello,TLSv1,TLSv1.1,TLSv1.2");
 
 		Tomcat tomcat = new Tomcat();
@@ -38,10 +37,10 @@ public class Startup {
 		tomcat.getService().addConnector(sslConnector);
 		tomcat.setConnector(connector);
 		try {
-			Context ctx = tomcat.addWebapp("", Conf.getAbsolutePath(".."));
+			Context ctx = tomcat.addWebapp("", Conf.getAbsolutePath("../src/test/webapp"));
 			WebResourceRoot resources = new StandardRoot(ctx);
 			resources.addPreResources(new DirResourceSet(resources, "/WEB-INF/classes",
-					Conf.getAbsolutePath("../../../../target/test-classes"), "/"));
+					Conf.getAbsolutePath("test-classes"), "/"));
 			ctx.setResources(resources);
 
 			Server server = tomcat.getServer();
