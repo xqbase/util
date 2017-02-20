@@ -214,10 +214,11 @@ public class HttpUtil {
 		}
 
 		// Response Body
-		if (http10 && !connect) {
+		if (!connect && (http10 || (close && contentLength == 0))) {
+			// For HTTP/1.0 response, or connection-close without Content-Length,
+			// read from stream until connection lost
 			OutputStream out = responseBody == null ? new ByteArrayQueue().getOutputStream() :
 					responseBody.getOutputStream();
-			// For HTTP/1.0 response, read from stream until connection lost
 			Streams.copy(gzip ? new GZIPInputStream(in) : in, out);
 			return status;
 		}
