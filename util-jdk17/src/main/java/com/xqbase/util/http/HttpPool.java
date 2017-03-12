@@ -2,6 +2,7 @@ package com.xqbase.util.http;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 
@@ -25,30 +26,48 @@ public class HttpPool extends SocketPool {
 		};
 	}
 
-	private HttpPool(HttpParam param, int timeout) {
-		super(getSocketSupplier(param, timeout), timeout);
+	private HttpPool(HttpParam param, int soTimeout, int kaTimeout) {
+		super(getSocketSupplier(param, soTimeout), kaTimeout);
 		path_ = param.path;
 		host = param.host;
 		proxyAuth = param.proxyAuth;
 	}
 
 	public HttpPool(String url, int timeout) {
-		this(null, url, timeout);
+		this(url, timeout, timeout);
+	}
+
+	public HttpPool(String url, int soTimeout, int kaTimeout) {
+		this(null, url, soTimeout, kaTimeout);
 	}
 
 	public HttpPool(HttpProxy httpProxy, String url, int timeout) {
-		this(new HttpParam(httpProxy, url), timeout);
+		this(httpProxy, url, timeout, timeout);
+	}
+
+	public HttpPool(HttpProxy httpProxy, String url, int soTimeout, int kaTimeout) {
+		this(new HttpParam(httpProxy, url), soTimeout, kaTimeout);
 	}
 
 	private int request(String path, ByteArrayQueue requestBody,
 			Map<String, List<String>> requestHeaders, boolean head, ByteArrayQueue responseBody,
 			Map<String, List<String>> responseHeaders) throws IOException {
-		try (Entry entry = borrow()) {
-			boolean[] connectionClose = {false};
-			int status = HttpUtil.request(entry.getObject(), path_ + path, host, proxyAuth,
-					requestBody, requestHeaders, head, responseBody, responseHeaders, connectionClose);
-			entry.setValid(!connectionClose[0]);
-			return status;
+		while (true) {
+			try (Entry entry = borrow()) {
+				try {
+					boolean[] connectionClose = {false};
+					int status = HttpUtil.request(entry.getObject(), path_ + path,
+							host, proxyAuth, requestBody, requestHeaders, head,
+							responseBody, responseHeaders, connectionClose);
+					entry.setValid(!connectionClose[0]);
+					return status;
+				} catch (IOException e) {
+					if (e instanceof SocketTimeoutException || entry.getBorrows() == 0) {
+						throw e;
+					}
+					continue;
+				}
+			}
 		}
 	}
 

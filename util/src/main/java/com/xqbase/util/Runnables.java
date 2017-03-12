@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import com.xqbase.util.function.RunnableEx;
+import com.xqbase.util.function.SupplierEx;
 
 public class Runnables {
 	private static AtomicInteger threadNum = new AtomicInteger(0);
@@ -82,12 +82,11 @@ public class Runnables {
 		return (U) o;
 	}
 
-	public static <E extends Exception> void retry(RunnableEx<E> runnable,
+	public static <T, E extends Exception> T retry(SupplierEx<T, E> supplier,
 			Consumer<E> handler, int count, int interval) throws E {
 		for (int i = 0; i < count; i ++) {
 			try {
-				runnable.run();
-				return;
+				return supplier.get();
 			} catch (Exception e) {
 				if (e instanceof RuntimeException) {
 					throw e;
@@ -98,7 +97,7 @@ public class Runnables {
 				}
 			}
 		}
-		runnable.run();
+		return supplier.get();
 	}
 
 	private static void awaitTermination(ExecutorService service) {
