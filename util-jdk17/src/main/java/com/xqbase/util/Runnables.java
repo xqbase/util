@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.xqbase.util.function.Consumer;
+import com.xqbase.util.function.RunnableEx;
 import com.xqbase.util.function.SupplierEx;
 
 public class Runnables {
@@ -86,6 +87,17 @@ public class Runnables {
 	@SuppressWarnings("unchecked")
 	private static <T, U extends T> U cast(T o) {
 		return (U) o;
+	}
+
+	public static <E extends Exception> void retry(final RunnableEx<E>
+			runnable, Consumer<E> handler, int count, int interval) throws E {
+		retry(new SupplierEx<Void, E>() {
+			@Override
+			public Void get() throws E {
+				runnable.run();
+				return null;
+			}
+		}, handler, count, interval);
 	}
 
 	public static <T, E extends Exception> T retry(SupplierEx<T, E> supplier,
