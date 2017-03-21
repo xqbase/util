@@ -68,7 +68,7 @@ public class ByteArrayQueue implements Cloneable {
 	}
 
 	/** Clears the queue. */
-	public void clear() {
+	public ByteArrayQueue clear() {
 		offset = 0;
 		length = 0;
 		// Release buffer
@@ -76,15 +76,17 @@ public class ByteArrayQueue implements Cloneable {
 			array = new byte[32];
 			shared = false;
 		}
+		return this;
 	}
 
 	/** @param capacity - New capacity. */
-	public void setCapacity(int capacity) {
+	public ByteArrayQueue setCapacity(int capacity) {
 		byte[] newArray = new byte[Math.max(capacity, length)];
 		System.arraycopy(array, offset, newArray, 0, length);
 		array = newArray;
 		offset = 0;
 		shared = false;
+		return this;
 	}
 
 	private int addLength(int len) {
@@ -125,12 +127,13 @@ public class ByteArrayQueue implements Cloneable {
 	private static final int BUFFER_SIZE = 2048;
 
 	/** Reads from an {@link InputStream} */
-	public void readFrom(InputStream in) throws IOException {
+	public ByteArrayQueue readFrom(InputStream in) throws IOException {
 		byte[] buffer = new byte[BUFFER_SIZE];
 		int bytesRead;
 		while ((bytesRead = in.read(buffer)) > 0) {
 			add(buffer, 0, bytesRead);
 		}
+		return this;
 	}
 
 	/**
@@ -188,9 +191,10 @@ public class ByteArrayQueue implements Cloneable {
 	}
 
 	/** Writes into an {@link OutputStream} */
-	public void writeTo(OutputStream out) throws IOException {
+	public ByteArrayQueue writeTo(OutputStream out) throws IOException {
 		out.write(array, offset, length);
 		clear();
+		return this;
 	}
 
 	/**
