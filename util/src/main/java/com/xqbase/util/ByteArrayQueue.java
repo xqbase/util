@@ -193,8 +193,7 @@ public class ByteArrayQueue implements Cloneable {
 	/** Writes into an {@link OutputStream} */
 	public ByteArrayQueue writeTo(OutputStream out) throws IOException {
 		out.write(array, offset, length);
-		clear();
-		return this;
+		return clear();
 	}
 
 	/**
