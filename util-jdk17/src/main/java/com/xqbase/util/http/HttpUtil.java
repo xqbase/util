@@ -17,7 +17,6 @@ import java.util.zip.GZIPInputStream;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
-import com.xqbase.util.Streams;
 
 class HttpParam {
 	String socketHost, path, host, proxyAuth;
@@ -218,9 +217,8 @@ public class HttpUtil {
 		if (!connect && (http10 || (close && contentLength == 0))) {
 			// For HTTP/1.0 response, or connection-close without Content-Length,
 			// read from stream until connection lost
-			OutputStream out = responseBody == null ? new ByteArrayQueue().getOutputStream() :
-					responseBody.getOutputStream();
-			Streams.copy(gzip ? new GZIPInputStream(in) : in, out);
+			(responseBody == null ? new ByteArrayQueue() : responseBody).
+					readFrom(gzip ? new GZIPInputStream(in) : in);
 			return status;
 		}
 		if (head || contentLength == 0) {
@@ -233,7 +231,7 @@ public class HttpUtil {
 				copyResponse(in, gzipBody, buffer, contentLength);
 				if (responseBody != null) {
 					try (GZIPInputStream gzipis = new GZIPInputStream(gzipBody.getInputStream())) {
-						Streams.copy(gzipis, responseBody.getOutputStream());
+						responseBody.readFrom(gzipis);
 					} catch (IOException e) {
 						// Ignored
 					}
@@ -279,7 +277,7 @@ public class HttpUtil {
 		}
 		if (gzip && responseBody != null) {
 			try (GZIPInputStream gzipis = new GZIPInputStream(gzipBody.getInputStream())) {
-				Streams.copy(gzipis, responseBody.getOutputStream());
+				responseBody.readFrom(gzipis);
 			} catch (IOException e) {
 				// Ignored
 			}

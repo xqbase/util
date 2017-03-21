@@ -17,7 +17,6 @@ import java.util.zip.GZIPInputStream;
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.SocketPool;
-import com.xqbase.util.Streams;
 
 class HttpParam {
 	String socketHost, path, host, proxyAuth;
@@ -134,9 +133,9 @@ public class HttpUtil {
 		}
 		headerBaq.add(HEAD_END);
 
-		out.write(headerBaq.array(), headerBaq.offset(), headerBaq.length());
+		headerBaq.writeTo(out);
 		if (requestBody != null) {
-			out.write(requestBody.array(), requestBody.offset(), requestBody.length());
+			requestBody.writeTo(out);
 		}
 	}
 
@@ -217,9 +216,8 @@ public class HttpUtil {
 		if (!connect && (http10 || (close && contentLength == 0))) {
 			// For HTTP/1.0 response, or connection-close without Content-Length,
 			// read from stream until connection lost
-			OutputStream out = responseBody == null ? new ByteArrayQueue().getOutputStream() :
-					responseBody.getOutputStream();
-			Streams.copy(gzip ? new GZIPInputStream(in) : in, out);
+			(responseBody == null ? new ByteArrayQueue() : responseBody).
+					readFrom(gzip ? new GZIPInputStream(in) : in);
 			return status;
 		}
 		if (head || contentLength == 0) {
@@ -232,7 +230,7 @@ public class HttpUtil {
 				copyResponse(in, gzipBody, buffer, contentLength);
 				if (responseBody != null) {
 					try (GZIPInputStream gzipis = new GZIPInputStream(gzipBody.getInputStream())) {
-						Streams.copy(gzipis, responseBody.getOutputStream());
+						responseBody.readFrom(gzipis);
 					} catch (IOException e) {
 						// Ignored
 					}
@@ -278,7 +276,7 @@ public class HttpUtil {
 		}
 		if (gzip && responseBody != null) {
 			try (GZIPInputStream gzipis = new GZIPInputStream(gzipBody.getInputStream())) {
-				Streams.copy(gzipis, responseBody.getOutputStream());
+				responseBody.readFrom(gzipis);
 			} catch (IOException e) {
 				// Ignored
 			}
@@ -322,8 +320,7 @@ public class HttpUtil {
 					add(proxyAuth.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		headerBaq.add(CRLF);
-		socket.getOutputStream().write(headerBaq.array(),
-				headerBaq.offset(), headerBaq.length());
+		headerBaq.writeTo(socket.getOutputStream());
 		int status = recv(socket.getInputStream(), null, null, false, true, null);
 		if (status != 200) {
 			throw new IOException("HTTP/1.0 " + status + " Connection NOT established");

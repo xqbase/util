@@ -14,7 +14,6 @@ import java.util.Properties;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Pool;
-import com.xqbase.util.Streams;
 import com.xqbase.util.function.ConsumerEx;
 
 class OneRowException extends Exception {
@@ -154,7 +153,7 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 	public void source(String sqlFile) throws IOException, SQLException {
 		ByteArrayQueue baq = new ByteArrayQueue();
 		try (FileInputStream inSql = new FileInputStream(sqlFile)) {
-			Streams.copy(inSql, baq.getOutputStream());
+			baq.readFrom(inSql);
 		}
 		String[] sqls = baq.toString().split(";");
 		for (String sql : sqls) {

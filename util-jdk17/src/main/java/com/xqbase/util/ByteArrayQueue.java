@@ -1,5 +1,6 @@
 package com.xqbase.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -121,6 +122,17 @@ public class ByteArrayQueue implements Cloneable {
 		return this;
 	}
 
+	private static final int BUFFER_SIZE = 2048;
+
+	/** Reads from an {@link InputStream} */
+	public void readFrom(InputStream in) throws IOException {
+		byte[] buffer = new byte[BUFFER_SIZE];
+		int bytesRead;
+		while ((bytesRead = in.read(buffer)) > 0) {
+			add(buffer, 0, bytesRead);
+		}
+	}
+
 	/**
 	 * @return An {@link OutputStream} suitable for writing binary data
 	 *			into the tail of the queue.
@@ -175,6 +187,12 @@ public class ByteArrayQueue implements Cloneable {
 		return b;
 	}
 
+	/** Writes into an {@link OutputStream} */
+	public void writeTo(OutputStream out) throws IOException {
+		out.write(array, offset, length);
+		clear();
+	}
+
 	/**
 	 * @return An {@link InputStream} suitable for reading binary data
 	 *			from the head of the queue.
@@ -203,6 +221,11 @@ public class ByteArrayQueue implements Cloneable {
 				return length();
 			}
 		};
+	}
+
+	/** @return The resultant byte array */
+	public byte[] getBytes() {
+		return Bytes.sub(array, offset, length);
 	}
 
 	/**
