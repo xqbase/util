@@ -6,6 +6,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.json.JSONArray;
@@ -167,7 +169,7 @@ public class Weibo {
 		}
 	}
 
-	public static ArrayList<Status> getMentions(String accessToken, long sinceId, int count) {
+	public static List<Status> getMentions(String accessToken, long sinceId, int count) {
 		try {
 			ByteArrayQueue body = new ByteArrayQueue();
 			if (httpPool.get("2/statuses/mentions.json?access_token=" +
@@ -177,7 +179,7 @@ public class Weibo {
 				return null;
 			}
 
-			ArrayList<Status> list = new ArrayList<>();
+			List<Status> list = new ArrayList<>();
 			JSONArray statuses = new JSONObject(body.toString(StandardCharsets.UTF_8)).
 					getJSONArray("statuses");
 			int length = statuses.length();
@@ -271,9 +273,9 @@ public class Weibo {
 		}
 	}
 
-	public static LinkedHashMap<String, String> getEmotionMap() {
+	public static Map<String, String> getEmotionMap() {
 		try {
-			LinkedHashMap<String, String> map = new LinkedHashMap<>();
+			Map<String, String> map = new LinkedHashMap<>();
 			ByteArrayQueue body = new ByteArrayQueue();
 			if (httpPool.get("2/emotions.json?source=" + appKey,
 					null, body, null) >= 400) {

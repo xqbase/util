@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.ConsoleHandler;
@@ -205,9 +207,9 @@ public class Conf {
 		}
 	}
 
-	private static final HashSet<String> TRUE_VALUES =
+	private static final Set<String> TRUE_VALUES =
 			new HashSet<>(Arrays.asList("true", "yes", "on", "enable", "enabled"));
-	private static final HashSet<String> FALSE_VALUES =
+	private static final Set<String> FALSE_VALUES =
 			new HashSet<>(Arrays.asList("false", "no", "off", "disable", "disabled"));
 
 	/**
@@ -222,7 +224,7 @@ public class Conf {
 		return defaultValue ? !FALSE_VALUES.contains(value_) : TRUE_VALUES.contains(value_);
 	}
 
-	private static void search(ArrayList<String> classes, String root, String path) {
+	private static void search(List<String> classes, String root, String path) {
 		File folder = new File(root + path);
 		String[] list = folder.list();
 		if (list == null) {
@@ -241,8 +243,8 @@ public class Conf {
 	/**
 	 * Traverse all classes under given packages
 	 */
-	public static ArrayList<String> getClasses(String... packageNames) {
-		ArrayList<String> classes = new ArrayList<>();
+	public static List<String> getClasses(String... packageNames) {
+		List<String> classes = new ArrayList<>();
 		for (String packageName : packageNames) {
 			String packagePath = packageName.replace('.', '/');
 			URL url = Conf.class.getResource("/" + packagePath);

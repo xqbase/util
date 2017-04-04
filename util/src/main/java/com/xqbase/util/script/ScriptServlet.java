@@ -7,8 +7,10 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.script.Bindings;
@@ -27,9 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 class CompiledScriptEx {
 	final AtomicLong accessed;
 	volatile long modified;
-	volatile FutureTask<CompiledScript> compileTask;
+	volatile RunnableFuture<CompiledScript> compileTask;
 
-	CompiledScriptEx(long now, long modified, FutureTask<CompiledScript> compileTask) {
+	CompiledScriptEx(long now, long modified,
+			RunnableFuture<CompiledScript> compileTask) {
 		accessed = new AtomicLong(now);
 		this.modified = modified;
 		this.compileTask = compileTask;
@@ -40,10 +43,10 @@ public class ScriptServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	private ScriptHelper helper = new ScriptHelper() {
-		private ConcurrentHashMap<String, CompiledScriptEx>
+		private ConcurrentMap<String, CompiledScriptEx>
 				compiledMap = new ConcurrentHashMap<>();
 
-		private FutureTask<CompiledScript>
+		private RunnableFuture<CompiledScript>
 				getCompileTask(File file, Compilable engine) {
 			return new FutureTask<>(() -> {
 				try (FileReader script = new FileReader(file)) {

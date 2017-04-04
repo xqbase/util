@@ -16,6 +16,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -64,8 +65,8 @@ public class ProxyPassServlet extends HttpServlet {
 
 	private String basePath, redirect;
 	private SocketPool pool;
-	private LinkedHashMap<String, String> headerMap = new LinkedHashMap<>();
-	private HashSet<String> skipHeaders = new HashSet<>();
+	private Map<String, String> headerMap = new LinkedHashMap<>();
+	private Set<String> skipHeaders = new HashSet<>();
 
 	@Override
 	public void init() throws ServletException {

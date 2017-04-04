@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import com.xqbase.util.ByteArrayQueue;
@@ -94,7 +95,7 @@ public class HttpUtil {
 			("Accept-Encoding: gzip\r\n" +
 			"Connection: Keep-Alive\r\n\r\n").getBytes();
 
-	private static final HashSet<String> SKIP_HEADERS = new HashSet<>(Arrays.asList(
+	private static final Set<String> SKIP_HEADERS = new HashSet<>(Arrays.asList(
 		"ACCEPT-ENCODING", "CONNECTION", "CONTENT-LENGTH", "PROXY_AUTH"
 	));
 
@@ -134,9 +135,9 @@ public class HttpUtil {
 		}
 		headerBaq.add(HEAD_END);
 
-		out.write(headerBaq.array(), headerBaq.offset(), headerBaq.length());
+		headerBaq.writeTo(out);
 		if (requestBody != null) {
-			out.write(requestBody.array(), requestBody.offset(), requestBody.length());
+			requestBody.writeTo(out);
 		}
 	}
 
@@ -321,8 +322,7 @@ public class HttpUtil {
 					add(proxyAuth.getBytes(StandardCharsets.ISO_8859_1)).add(CRLF);
 		}
 		headerBaq.add(CRLF);
-		socket.getOutputStream().write(headerBaq.array(),
-				headerBaq.offset(), headerBaq.length());
+		headerBaq.writeTo(socket.getOutputStream());
 		int status = recv(socket.getInputStream(), null, null, false, true, null);
 		if (status != 200) {
 			throw new IOException("HTTP/1.0 " + status + " Connection NOT established");

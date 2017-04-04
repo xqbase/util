@@ -6,13 +6,14 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Bytes;
 
 public class HttpForm {
 	private ByteArrayQueue body = new ByteArrayQueue();
-	private LinkedHashMap<String, List<String>> headers = new LinkedHashMap<>();
+	private Map<String, List<String>> headers = new LinkedHashMap<>();
 	private boolean multipart, appended = false;
 	private String boundary = null;
 	private byte[] boundaryBytes = null;
@@ -36,7 +37,7 @@ public class HttpForm {
 		return body;
 	}
 
-	public LinkedHashMap<String, List<String>> getHeaders() {
+	public Map<String, List<String>> getHeaders() {
 		return headers;
 	}
 

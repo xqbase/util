@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,7 +48,7 @@ public class Log {
 	}
 
 	private static final StackTraceElement[] EMPTY_STACK_TRACE = {};
-	private static final HashSet<String> THREAD_CLASSES = new HashSet<>(Arrays.
+	private static final Set<String> THREAD_CLASSES = new HashSet<>(Arrays.
 			asList("java.lang.Thread",
 			"java.util.concurrent.ThreadPoolExecutor",
 			"java.util.concurrent.ScheduledThreadPoolExecutor",
@@ -54,7 +56,7 @@ public class Log {
 			"java.util.concurrent.Executors",
 			"com.xqbase.util.Runnables"));
 
-	private static void concat(ArrayList<StackTraceElement> stes, Throwable t) {
+	private static void concat(List<StackTraceElement> stes, Throwable t) {
 		for (StackTraceElement ste : t.getStackTrace()) {
 			String className = ste.getClassName();
 			int dollar = className.indexOf('$');
@@ -85,7 +87,7 @@ public class Log {
 			return t;
 		}
 		// concatenate t with atop
-		ArrayList<StackTraceElement> stes = new ArrayList<>();
+		List<StackTraceElement> stes = new ArrayList<>();
 		concat(stes, cloned);
 		do {
 			concat(stes, atop);

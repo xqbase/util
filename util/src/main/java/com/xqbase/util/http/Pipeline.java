@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.SocketPool;
@@ -18,7 +19,7 @@ public class Pipeline {
 		private String path;
 		private boolean head;
 		private ByteArrayQueue body = null;
-		private HashMap<String, List<String>> headers = new HashMap<>();
+		private Map<String, List<String>> headers = new HashMap<>();
 
 		public Request(Object id, String path) {
 			this(id, path, false);
@@ -50,7 +51,7 @@ public class Pipeline {
 			this.body = body;
 		}
 
-		public HashMap<String, List<String>> getHeaders() {
+		public Map<String, List<String>> getHeaders() {
 			return headers;
 		}
 	}
@@ -59,7 +60,7 @@ public class Pipeline {
 		private Object id;
 		private int status = 0;
 		private ByteArrayQueue body = new ByteArrayQueue();
-		private LinkedHashMap<String, List<String>> headers = new LinkedHashMap<>();
+		private Map<String, List<String>> headers = new LinkedHashMap<>();
 
 		public Response(Object id) {
 			this.id = id;
@@ -81,7 +82,7 @@ public class Pipeline {
 			return body;
 		}
 
-		public HashMap<String, List<String>> getHeaders() {
+		public Map<String, List<String>> getHeaders() {
 			return headers;
 		}
 	}

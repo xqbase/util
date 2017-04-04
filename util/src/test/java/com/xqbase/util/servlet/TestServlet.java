@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
@@ -27,7 +28,7 @@ public class TestServlet extends HttpServlet {
 		out.println("sessionId=" + req.getSession(true).getId());
 		Cookie[] cookies = req.getCookies();
 		if (cookies != null) {
-			ArrayList<String> cookieList = new ArrayList<>();
+			List<String> cookieList = new ArrayList<>();
 			for (Cookie cookie : cookies) {
 				cookieList.add(cookie.getName() + "=" + cookie.getValue());
 			}

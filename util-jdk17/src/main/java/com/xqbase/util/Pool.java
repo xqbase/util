@@ -1,5 +1,6 @@
 package com.xqbase.util;
 
+import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -96,7 +97,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 
 	SupplierEx<? extends T, ? extends E> initializer;
 	ConsumerEx<? super T, ?> finalizer;
-	ConcurrentLinkedDeque<Entry> deque = new ConcurrentLinkedDeque<>();
+	Deque<Entry> deque = new ConcurrentLinkedDeque<>();
 	AtomicInteger activeCount = new AtomicInteger(0);
 	volatile boolean closed = false;
 

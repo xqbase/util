@@ -7,6 +7,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -23,7 +24,7 @@ import com.xqbase.util.Strings;
 public class ForwardedFilter extends HttpFilter {
 	private static final X509Certificate[] EMPTY_X509CERTS = {};
 
-	private HashSet<String> trustedIPs;
+	private Set<String> trustedIPs;
 
 	@Override
 	public void init(FilterConfig conf) throws ServletException {

@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,7 +19,7 @@ import com.xqbase.util.http.HttpPool;
 public class Weixin {
 	public static class UserInfo {
 		public String openid, nickname, sex, province, city, country, headimgurl, unionid;
-		public HashSet<String> privilege = new HashSet<>(); 
+		public Set<String> privilege = new HashSet<>(); 
 	}
 
 	private static final String WEIXIN_API_URL = "https://api.weixin.qq.com/sns/";

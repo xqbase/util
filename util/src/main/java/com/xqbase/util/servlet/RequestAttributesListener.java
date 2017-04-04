@@ -1,6 +1,7 @@
 package com.xqbase.util.servlet;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -9,7 +10,7 @@ public class RequestAttributesListener implements ServletRequestListener {
 	public static final String REQUEST_ATTRIBUTES =
 			RequestAttributesListener.class.getName() + ".requestAttributes";
 
-	private volatile LinkedHashMap<String, String> attrMap = null;
+	private volatile Map<String, String> attrMap = null;
 
 	private void init(ServletRequestEvent event) {
 		if (attrMap != null) {

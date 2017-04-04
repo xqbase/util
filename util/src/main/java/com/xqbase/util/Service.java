@@ -1,5 +1,6 @@
 package com.xqbase.util;
 
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -43,8 +44,8 @@ public class Service implements Executor {
 	private CountDownLatch latch = new CountDownLatch(1);
 	private ExecutorService executor = Executors.newCachedThreadPool();
 	private AtomicBoolean interrupted = new AtomicBoolean(false);
-	private ConcurrentLinkedQueue<Runnable> shutdownHooks = new ConcurrentLinkedQueue<>();
-	private ConcurrentLinkedQueue<AutoCloseable> closeables = new ConcurrentLinkedQueue<>();
+	private Queue<Runnable> shutdownHooks = new ConcurrentLinkedQueue<>();
+	private Queue<AutoCloseable> closeables = new ConcurrentLinkedQueue<>();
 	private Thread shutdownHook = new Thread(() -> {
 		interrupted.set(true);
 		Runnable runnable;

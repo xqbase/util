@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import com.xqbase.util.ByteArrayQueue;
@@ -94,7 +95,7 @@ public class HttpUtil {
 			("Accept-Encoding: gzip\r\n" +
 			"Connection: Keep-Alive\r\n\r\n").getBytes();
 
-	private static final HashSet<String> SKIP_HEADERS = new HashSet<>(Arrays.asList(
+	private static final Set<String> SKIP_HEADERS = new HashSet<>(Arrays.asList(
 		"ACCEPT-ENCODING", "CONNECTION", "CONTENT-LENGTH", "PROXY_AUTH"
 	));
 

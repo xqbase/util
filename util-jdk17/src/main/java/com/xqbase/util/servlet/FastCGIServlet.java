@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -138,7 +139,7 @@ public class FastCGIServlet extends HttpServlet {
 	}
 
 	private int timeout, maxRequests;
-	private LinkedBlockingQueue<SocketEntry> socketQueue;
+	private BlockingQueue<SocketEntry> socketQueue;
 
 	@Override
 	public void init() throws ServletException {

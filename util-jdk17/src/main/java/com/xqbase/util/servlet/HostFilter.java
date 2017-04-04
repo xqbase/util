@@ -3,6 +3,7 @@ package com.xqbase.util.servlet;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -14,8 +15,8 @@ import com.xqbase.util.Numbers;
 import com.xqbase.util.Strings;
 
 public class HostFilter extends HttpFilter {
-	private HashMap<String, String> map = new HashMap<>(),
-			wildcardMap = new HashMap<>();
+	private Map<String, String> map = new HashMap<>();
+	private Map<String, String> wildcardMap = new HashMap<>();
 
 	@Override
 	public void init(FilterConfig conf) {
