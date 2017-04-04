@@ -27,7 +27,7 @@ class BandwidthOutputStream extends ServletOutputStream {
 	private CountLock lock;
 	private int limit, blockSize;
 
-	public BandwidthOutputStream(ServletOutputStream out, CountLock lock, int limit) {
+	BandwidthOutputStream(ServletOutputStream out, CountLock lock, int limit) {
 		this.out = out;
 		this.lock = lock;
 		this.limit = limit;

@@ -3,6 +3,7 @@ package com.xqbase.util.servlet;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -16,10 +17,10 @@ import com.xqbase.util.Numbers;
 class ErrorPageResponse extends HttpServletResponseWrapper {
 	private HttpServletRequest req;
 	private HttpServletResponse resp;
-	private HashMap<Integer, String> map;
+	private Map<Integer, String> map;
 
-	public ErrorPageResponse(HttpServletRequest req, HttpServletResponse resp,
-			HashMap<Integer, String> map) {
+	ErrorPageResponse(HttpServletRequest req, HttpServletResponse resp,
+			Map<Integer, String> map) {
 		super(resp);
 		this.req = req;
 		this.resp = resp;
@@ -59,7 +60,7 @@ class ErrorPageResponse extends HttpServletResponseWrapper {
 }
 
 public class ErrorPageFilter extends HttpFilter {
-	private HashMap<Integer, String> map = new HashMap<>();
+	private Map<Integer, String> map = new HashMap<>();
 
 	@Override
 	public void init(FilterConfig conf) {
