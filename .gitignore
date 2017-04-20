@@ -16,6 +16,10 @@ hs_err_pid*
 .project
 .classpath
 
+# IntelliJ IDEA Files #
+.idea
+*.iml
+
 # Maven Files #
 /util/target
 /util-jdk17/target
