@@ -340,6 +340,8 @@ public class FastCGIServlet extends HttpServlet {
 						sbErr.delete(0, index + 1);
 					}
 					break;
+
+				default:
 				}
 			}
 

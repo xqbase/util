@@ -147,6 +147,7 @@ public class ProxyPassServlet extends HttpServlet {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) {
 		String query = req.getQueryString();
