@@ -25,7 +25,9 @@ public class TestListener implements ServletContextListener {
 
 	private static void schedule() {
 		try {
-			throw new IOException("Test");
+			if (Boolean.FALSE.booleanValue()) {
+				throw new IOException("Test");
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -16,6 +16,7 @@ import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -147,6 +148,9 @@ public class ProxyPassServlet extends HttpServlet {
 		}
 	}
 
+	private static final int METHOD_HEAD = 1;
+	private static final List<String> METHOD_VALUE = Arrays.asList("GET", "HEAD");
+
 	@SuppressWarnings("resource")
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) {
@@ -154,6 +158,7 @@ public class ProxyPassServlet extends HttpServlet {
 		String fullPath = basePath + req.getPathInfo() +
 				(Strings.isEmpty(query) ? "" : "?" + query);
 		String method = req.getMethod();
+		int methodType = METHOD_VALUE.indexOf(method);
 
 		try (SocketPool.Entry socketEntry = pool.borrow()) {
 			// Request Head
@@ -226,7 +231,7 @@ public class ProxyPassServlet extends HttpServlet {
 					}
 					outSocket.write(buffer, 0, bytesRead);
 				}
-			} else if (method.equals("GET") || method.equals("HEAD")) {
+			} else if (methodType >= 0) {
 				writeln(outSocket);
 			} else if (contentLength == 0) {
 				writeHeader(outSocket, "Content-Length", "0");
@@ -259,7 +264,7 @@ public class ProxyPassServlet extends HttpServlet {
 			boolean http10 = false, close = false;
 			int status = 0;
 			StringBuilder sb = new StringBuilder();
-			contentLength = 0;
+			contentLength = Integer.MIN_VALUE;
 			while (true) {
 				int b = inSocket.read();
 				if (b < 0) {
@@ -317,16 +322,23 @@ public class ProxyPassServlet extends HttpServlet {
 				}
 				sb.setLength(0);
 			}
+			if (contentLength == Integer.MIN_VALUE) {
+				if (close && methodType != METHOD_HEAD) {
+					http10 = true;
+				} else {
+					contentLength = 0;
+				}
+			}
 
 			// Response Body
 			OutputStream outResp = resp.getOutputStream();
 			if (http10) {
 				// For HTTP/1.0 response, read from stream until connection lost
-				Streams.copy(inSocket, outResp);
+				Streams.copy(inSocket, outResp, true);
 				socketEntry.setValid(false);
 				return;
 			}
-			if (contentLength == 0 || method.equals("HEAD")) {
+			if (contentLength == 0 || methodType == METHOD_HEAD) {
 				resp.setContentLength(contentLength);
 				socketEntry.setValid(!close);
 				return;

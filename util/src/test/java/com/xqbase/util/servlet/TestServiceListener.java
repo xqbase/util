@@ -1,11 +1,11 @@
 package com.xqbase.util.servlet;
 
 import javax.servlet.ServletContextEvent;
-import javax.servlet.annotation.WebListener;
+// import javax.servlet.annotation.WebListener;
 
 import com.xqbase.util.TestService;
 
-@WebListener
+// @WebListener
 public class TestServiceListener extends ServiceListener {
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
