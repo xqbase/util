@@ -14,6 +14,7 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Element;
 
 import com.xqbase.util.winrm.shell.CommandLine;
+import com.xqbase.util.winrm.shell.CommandStateType;
 import com.xqbase.util.winrm.shell.DesiredStreamType;
 import com.xqbase.util.winrm.shell.Receive;
 import com.xqbase.util.winrm.shell.ReceiveResponse;
@@ -31,6 +32,10 @@ import com.xqbase.util.winrm.wsman.Signal;
 public class WinRmClient implements AutoCloseable {
 	private static final String RESOURCE_URI =
 			"http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
+    private static final String COMMAND_STATE_DONE =
+    		"http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandState/Done";
+    private static final String SIGNAL_TERMINATE =
+    		"http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/terminate";
 	private static final int MAX_ENVELOPER_SIZE = 153600;
 
 	private static Class<?> memberSubmissionAddressingFeatureClass;
@@ -154,28 +159,32 @@ public class WinRmClient implements AutoCloseable {
 		stream.setValue("stdout stderr");
 		receive.setDesiredStream(stream);
 
-		ReceiveResponse recvResponse;
-		try {
-			recvResponse = winRmPort.receive(receive, RESOURCE_URI,
-					MAX_ENVELOPER_SIZE, operationTimeout, LOCALE, shellSelector);
-		} catch (WebServiceException e) {
-			throw new WinRmException(e.getMessage());
-		}
-
-		List<StreamType> streams = recvResponse.getStream();
-		for (StreamType s : streams) {
-			byte[] value = s.getValue();
-			if (value == null) {
-				continue;
+		int exitCode;
+		while (true) {
+			ReceiveResponse recvResponse;
+			try {
+				recvResponse = winRmPort.receive(receive, RESOURCE_URI,
+						MAX_ENVELOPER_SIZE, operationTimeout, LOCALE, shellSelector);
+			} catch (WebServiceException e) {
+				throw new WinRmException(e.getMessage());
 			}
-			("stderr".equals(s.getName()) ? stderr : stdout).
-					add(new String(value, StandardCharsets.ISO_8859_1));
+			for (StreamType s : recvResponse.getStream()) {
+				byte[] value = s.getValue();
+				if (value != null) {
+					("stderr".equals(s.getName()) ? stderr : stdout).
+							add(new String(value, StandardCharsets.ISO_8859_1));
+				}
+			}
+			CommandStateType state = recvResponse.getCommandState();
+			if (COMMAND_STATE_DONE.equals(state.getState())) {
+				exitCode = state.getExitCode().intValue();
+				break;
+			}
 		}
 
 		Signal signal = new Signal();
 		signal.setCommandId(commandId);
-		signal.setCode("http://schemas.microsoft.com/" +
-				"wbem/wsman/1/windows/shell/signal/terminate");
+		signal.setCode(SIGNAL_TERMINATE);
 
 		try {
 			winRmPort.signal(signal, RESOURCE_URI, MAX_ENVELOPER_SIZE,
@@ -183,7 +192,7 @@ public class WinRmClient implements AutoCloseable {
 		} catch (WebServiceException e) {
 			throw new WinRmException(e.getMessage());
 		}
-		return recvResponse.getCommandState().getExitCode().intValue();
+		return exitCode;
 	}
 
 	@Override
