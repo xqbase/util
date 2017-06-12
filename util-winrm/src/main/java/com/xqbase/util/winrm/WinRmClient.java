@@ -1,7 +1,7 @@
 package com.xqbase.util.winrm;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 import javax.xml.ws.BindingProvider;
@@ -139,8 +139,8 @@ public class WinRmClient implements AutoCloseable {
 		shellSelector.getSelector().add(selType);
 	}
 
-	public int exec(String command, List<String> stdout,
-			List<String> stderr) throws WinRmException {
+	public int exec(String command, OutputStream stdout,
+			OutputStream stderr) throws WinRmException, IOException {
 		CommandLine cmdLine = new CommandLine();
 		cmdLine.setCommand(command);
 
@@ -171,8 +171,7 @@ public class WinRmClient implements AutoCloseable {
 			for (StreamType s : recvResponse.getStream()) {
 				byte[] value = s.getValue();
 				if (value != null) {
-					("stderr".equals(s.getName()) ? stderr : stdout).
-							add(new String(value, StandardCharsets.ISO_8859_1));
+					("stderr".equals(s.getName()) ? stderr : stdout).write(value);
 				}
 			}
 			CommandStateType state = recvResponse.getCommandState();
