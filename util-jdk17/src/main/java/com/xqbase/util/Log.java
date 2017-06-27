@@ -98,11 +98,26 @@ public class Log {
 		return cloned;
 	}
 
+	private static Set<String> excludedClasses =
+			new HashSet<>(Arrays.asList(Log.class.getName()));
+
 	private static void log(Level l, String s, Throwable t) {
-		StackTraceElement ste = new Throwable().getStackTrace()[2];
+		String sourceClass = "", sourceMethod = "";
+		for (StackTraceElement ste : new Throwable().getStackTrace()) {
+			String cls = ste.getClassName();
+			if (!excludedClasses.contains(cls)) {
+				sourceClass = cls;
+				sourceMethod = ste.getMethodName();
+				break;
+			}
+		}
 		String x = suffix.get();
-		logger_.get().logp(l, ste.getClassName(), ste.getMethodName(),
+		logger_.get().logp(l, sourceClass, sourceMethod,
 				x == null ? s : s + x, t == null ? null : concat(t));
+	}
+
+	public static Set<String> getExcludedClasses() {
+		return excludedClasses;
 	}
 
 	/** Log a VERBOSE/FINEST message */
