@@ -15,7 +15,6 @@ public class HttpForm {
 	private ByteArrayQueue body = new ByteArrayQueue();
 	private Map<String, List<String>> headers = new LinkedHashMap<>();
 	private boolean multipart, appended = false;
-	private String boundary = null;
 	private byte[] boundaryBytes = null;
 	private Charset charset;
 
@@ -24,7 +23,7 @@ public class HttpForm {
 		this.charset = charset;
 		String contentType;
 		if (multipart) {
-			boundary = Bytes.toHexLower(Bytes.random(16));
+			String boundary = Bytes.toHexLower(Bytes.random(16));
 			boundaryBytes = boundary.getBytes();
 			contentType = "multipart/form-data; boundary=" + boundary;
 		} else {
