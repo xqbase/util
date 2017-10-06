@@ -27,7 +27,7 @@ public class HttpForm {
 			boundaryBytes = boundary.getBytes();
 			contentType = "multipart/form-data; boundary=" + boundary;
 		} else {
-			contentType = "application/x-www-form-urlencoded";
+			contentType = "application/x-www-form-urlencoded; charset=" + charset;
 		}
 		headers.put("Content-Type", Collections.singletonList(contentType));
 	}

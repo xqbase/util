@@ -17,19 +17,6 @@ public class Strings {
 		return s == null ? "" : s.length() > len ? s.substring(0, len) : s;
 	}
 
-	public static String join(String separator, String... elements) {
-		StringBuilder sb = new StringBuilder();
-		for (String element : elements) {
-			if (!isEmpty(element)) {
-				if (sb.length() > 0) {
-					sb.append(separator);
-				}
-				sb.append(element);
-			}
-		}
-		return sb.toString();
-	}
-
 	public static String encodeUrl(String s) {
 		try {
 			return s == null ? "" : URLEncoder.encode(s, "UTF-8");
