@@ -10,17 +10,23 @@ public class DumpConsumer implements Consumer<Row>, AutoCloseable {
 
 	private int rows = 0, columns;
 	private PrintStream out;
-	private String sql;
+	private String selectSql, insertSql;
 
 	public DumpConsumer(PrintStream out, String table, String... columns) {
 		this.out = out;
 		this.columns = columns.length;
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < columns.length; i ++) {
-			sb.append(", " + columns[i]);
+		for (String column : columns) {
+			sb.append(", " + column);
 		}
-		sql = "INSERT INTO " + table + " (" + sb.substring(2) + ") VALUES ";
+		String columns_ = sb.substring(2);
+		selectSql = "SELECT " + columns_ + " FROM " + table;
+		insertSql = "INSERT INTO " + table + " (" + columns_ + ") VALUES ";
 		out.println("TRUNCATE TABLE " + table + ";");
+	}
+
+	public String getSelectSql() {
+		return selectSql;
 	}
 
 	@Override
@@ -29,7 +35,7 @@ public class DumpConsumer implements Consumer<Row>, AutoCloseable {
 			if (rows > 0) {
 				out.println(";");
 			}
-			out.print(sql);
+			out.print(insertSql);
 		} else {
 			out.print(", ");
 		}
