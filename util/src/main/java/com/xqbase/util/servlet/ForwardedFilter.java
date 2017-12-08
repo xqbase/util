@@ -119,6 +119,12 @@ public class ForwardedFilter implements HttpFilter {
 			public String getRemoteHost() {
 				return remoteAddr;
 			}
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(scheme).append("://").
+						append(host).append(getRequestURI());
+			}
 		};
 		chain.doFilter(req_, resp);
 	}

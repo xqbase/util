@@ -81,7 +81,7 @@ public class ForwardedFilter extends HttpFilter {
 
 		final boolean secure = "https".equalsIgnoreCase(proto);
 		final int serverPort;
-		String host = req.getHeader("Host");
+		final String host = req.getHeader("Host");
 		if (host == null) {
 			serverPort = secure ? 443 : 80;
 		} else {
@@ -118,6 +118,12 @@ public class ForwardedFilter extends HttpFilter {
 			@Override
 			public String getRemoteHost() {
 				return remoteAddr;
+			}
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(scheme).append("://").
+						append(host).append(getRequestURI());
 			}
 		};
 		chain.doFilter(req_, resp);
