@@ -12,7 +12,7 @@ public class Count extends AtomicInteger {
 	}
 
 	protected Count() {
-		this(1);
+		this(0);
 	}
 
 	@Override
