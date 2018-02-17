@@ -13,10 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
-import com.xqbase.util.concurrent.SimpleCountMap;
+import com.xqbase.util.concurrent.CountMap;
 
 public class DoSFilter implements Filter {
-	private SimpleCountMap<String> countMap = new SimpleCountMap<>();
+	private CountMap<String> countMap = new CountMap<>();
 	private AtomicLong accessed = new AtomicLong(System.currentTimeMillis());
 	private int period, requests;
 

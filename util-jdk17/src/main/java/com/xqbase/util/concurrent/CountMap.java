@@ -2,21 +2,17 @@ package com.xqbase.util.concurrent;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.xqbase.util.function.Supplier;
-
-public class CountMap<K, V extends Count> extends ConcurrentHashMap<K, V> {
+public class CountMap<K> extends ConcurrentHashMap<K, Count> {
 	private static final long serialVersionUID = 1L;
 
-	private Supplier<V> supplier;
-
-	public CountMap(Supplier<V> supplier) {
-		this.supplier = supplier;
+	protected Count newCount() {
+		return new Count();
 	}
 
-	public V acquire(K key) {
-		V count = get(key);
+	public Count acquire(K key) {
+		Count count = get(key);
 		if (count == null) {
-			V newCount = supplier.get();
+			Count newCount = newCount();
 			count = putIfAbsent(key, newCount);
 			if (count == null) {
 				count = newCount;
@@ -26,7 +22,7 @@ public class CountMap<K, V extends Count> extends ConcurrentHashMap<K, V> {
 		return count;
 	}
 
-	public void release(K key, V count) {
+	public void release(K key, Count count) {
 		if (count.decrementAndGet() == 0) {
 			remove(key, Count.ZERO);
 		}

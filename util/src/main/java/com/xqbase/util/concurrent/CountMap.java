@@ -1,24 +1,21 @@
 package com.xqbase.util.concurrent;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
-public class CountMap<K, V extends Count> extends ConcurrentHashMap<K, V> {
+public class CountMap<K> extends ConcurrentHashMap<K, Count> {
 	private static final long serialVersionUID = 1L;
 
-	private Supplier<V> supplier;
-
-	public CountMap(Supplier<V> supplier) {
-		this.supplier = supplier;
+	protected Count newCount() {
+		return new Count();
 	}
 
-	public V acquire(K key) {
-		V count = computeIfAbsent(key, k -> supplier.get());
+	public Count acquire(K key) {
+		Count count = computeIfAbsent(key, k -> newCount());
 		count.incrementAndGet();
 		return count;
 	}
 
-	public void release(K key, V count) {
+	public void release(K key, Count count) {
 		if (count.decrementAndGet() == 0) {
 			remove(key, Count.ZERO);
 		}
