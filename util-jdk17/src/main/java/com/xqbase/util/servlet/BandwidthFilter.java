@@ -38,29 +38,29 @@ class BandwidthOutputStream extends ServletOutputStream {
 		blockSize = limit * MAX_INTERVAL;
 	}
 
-	private void write(byte[] b, int off, int len, int interval) throws IOException {
-		if (lock.get() > 1) {
-			try {
-				if (lock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS)) {
-					try {
-						out.write(b, off, len);
-						// Speed = Block-Size / Interval
-						Time.sleep(interval);
-					} finally {
-						lock.unlock();
-					}
-				} else {
-					Log.w("Timeout (" + lock.get() + " Connections)");
-					throw new IOException("Timeout");
-				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				throw new IOException("Interrupted");
-			}
-		} else {
+	private void write(byte[] b, int off,
+			int len, int interval) throws IOException {
+		if (lock.get() <= 1) {
 			// Do not lock if only one request
 			out.write(b, off, len);
 			Time.sleep(interval);
+			return;
+		}
+		try {
+			if (!lock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS)) {
+				Log.w("Timeout (" + lock.get() + " Connections)");
+				throw new IOException("Timeout");
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException("Interrupted");
+		}
+		try {
+			out.write(b, off, len);
+			// Speed = Block-Size / Interval
+			Time.sleep(interval);
+		} finally {
+			lock.unlock();
 		}
 	}
 
