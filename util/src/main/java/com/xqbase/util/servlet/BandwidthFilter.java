@@ -2,6 +2,7 @@ package com.xqbase.util.servlet;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -21,7 +22,9 @@ import com.xqbase.util.concurrent.CountLock;
 import com.xqbase.util.concurrent.LockMap;
 
 class BandwidthOutputStream extends ServletOutputStream {
-	static final int MAX_INTERVAL = 16;
+	private static final int MAX_INTERVAL = 16;
+	private static final int MAX_CONNECTIONS = 256;
+	private static final int LOCK_TIMEOUT = MAX_INTERVAL * MAX_CONNECTIONS;
 
 	private ServletOutputStream out;
 	private CountLock lock;
@@ -36,13 +39,21 @@ class BandwidthOutputStream extends ServletOutputStream {
 
 	private void write(byte[] b, int off, int len, int interval) throws IOException {
 		if (lock.get() > 1) {
-			lock.lock();
 			try {
-				out.write(b, off, len);
-				// Speed = Block-Size / Interval
-				Time.sleep(interval);
-			} finally {
-				lock.unlock();
+				if (lock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS)) {
+					try {
+						out.write(b, off, len);
+						// Speed = Block-Size / Interval
+						Time.sleep(interval);
+					} finally {
+						lock.unlock();
+					}
+				} else {
+					throw new IOException("Timeout");
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IOException("Interrupted");
 			}
 		} else {
 			// Do not lock if only one request
@@ -98,6 +109,8 @@ class BandwidthOutputStream extends ServletOutputStream {
 }
 
 class BandwidthWrapper implements Closeable {
+	private static LockMap<String> lockMap = new LockMap<>(true);
+
 	private BandwidthOutputStream out = null;
 	private CountLock lock = null;
 	private ServletResponse resp;
@@ -116,7 +129,7 @@ class BandwidthWrapper implements Closeable {
 		}
 		ServletOutputStream out_ = resp.getOutputStream();
 		// Throw before lock
-		lock = BandwidthFilter.lockMap.acquire(ip);
+		lock = lockMap.acquire(ip);
 		out = new BandwidthOutputStream(out_, lock, limit);
 		return out;
 	}
@@ -141,14 +154,12 @@ class BandwidthWrapper implements Closeable {
 	@Override
 	public void close() {
 		if (out != null) {
-			BandwidthFilter.lockMap.release(ip, lock);
+			lockMap.release(ip, lock);
 		}
 	}
 }
 
 public class BandwidthFilter implements Filter {
-	static LockMap<String> lockMap = new LockMap<>(true);
-
 	private int limit;
 
 	@Override
