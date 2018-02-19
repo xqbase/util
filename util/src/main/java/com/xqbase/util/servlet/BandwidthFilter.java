@@ -16,6 +16,7 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import com.xqbase.util.Log;
 import com.xqbase.util.Numbers;
 import com.xqbase.util.Time;
 import com.xqbase.util.concurrent.CountLock;
@@ -49,6 +50,7 @@ class BandwidthOutputStream extends ServletOutputStream {
 						lock.unlock();
 					}
 				} else {
+					Log.w("Timeout (" + lock.get() + " Connections)");
 					throw new IOException("Timeout");
 				}
 			} catch (InterruptedException e) {
