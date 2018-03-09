@@ -33,7 +33,11 @@ public class Row {
 
 	public Object get(String column) {
 		Integer column_ = columnMap.get(column.toLowerCase());
-		return column_ == null ? null : data[column_.intValue()];
+		if (column_ == null) {
+			throw new IllegalArgumentException("Unknown column \"" +
+					column + "\"");
+		}
+		return data[column_.intValue()];
 	}
 
 	public int getInt(int column) {
