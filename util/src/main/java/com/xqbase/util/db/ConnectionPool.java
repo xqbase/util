@@ -6,10 +6,12 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.SQLRecoverableException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.Properties;
 
 import com.xqbase.util.ByteArrayQueue;
@@ -128,9 +130,15 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 						ps.setObject(i + 1, in[i]);
 					}
 					try (ResultSet rs = ps.executeQuery()) {
-						int columnCount = rs.getMetaData().getColumnCount();
+						HashMap<String, Integer> columnMap = new HashMap<>();
+						ResultSetMetaData rsmd = rs.getMetaData();
+						int columnCount = rsmd.getColumnCount();
+						for (int i = 0; i < columnCount; i ++) {
+							columnMap.put(rsmd.getColumnName(i + 1).
+									toLowerCase(), Integer.valueOf(i));
+						}
 						while (rs.next()) {
-							consumer.accept(new Row(rs, columnCount));
+							consumer.accept(new Row(rs, columnCount, columnMap));
 						}
 					} catch (RuntimeException | SQLException e) {
 						throw e;
