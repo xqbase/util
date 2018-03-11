@@ -149,7 +149,7 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 						ResultSetMetaData rsmd = rs.getMetaData();
 						int columnCount = rsmd.getColumnCount();
 						for (int i = 0; i < columnCount; i ++) {
-							columnMap.put(rsmd.getColumnName(i + 1).
+							columnMap.put(rsmd.getColumnLabel(i + 1).
 									toLowerCase(), Integer.valueOf(i));
 						}
 						while (rs.next()) {
