@@ -70,13 +70,21 @@ public class ForwardedFilter implements HttpFilter {
 		String certificates = req.getHeader("X-Forwarded-Certificates");
 		if (certificates != null) {
 			ByteArrayQueue baq = new ByteArrayQueue();
-			baq.add(Base64.getDecoder().decode(certificates));
 			try {
-				Collection<? extends Certificate> certs = CertificateFactory.
-						getInstance("X509").generateCertificates(baq.getInputStream());
-				req.setAttribute("javax.servlet.request.X509Certificate",
-						certs.toArray(EMPTY_X509CERTS));
-			} catch (GeneralSecurityException e) {/**/}
+				baq.add(Base64.getDecoder().decode(certificates));
+			} catch (IllegalArgumentException e) {
+				// Ignored
+			}
+			if (baq.length() > 0) {
+				try {
+					Collection<? extends Certificate> certs = CertificateFactory.
+							getInstance("X509").generateCertificates(baq.getInputStream());
+					req.setAttribute("javax.servlet.request.X509Certificate",
+							certs.toArray(EMPTY_X509CERTS));
+				} catch (GeneralSecurityException e) {
+					// Ignored
+				}
+			}
 		}
 
 		boolean secure = "https".equalsIgnoreCase(proto);
