@@ -7,16 +7,22 @@ import org.json.JSONObject;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Log;
-import com.xqbase.util.http.HttpUtil;
+import com.xqbase.util.http.HttpPool;
 
 public class TaobaoIp {
 	private static final String SERVICE_URL =
 			"http://ip.taobao.com/service/getIpInfo.php?ip=";
 
+	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 30000, 3000);
+
+	public static HttpPool getHttpPool() {
+		return httpPool;
+	}
+
 	public static String getIpInfo(String ip) {
 		try {
 			ByteArrayQueue body = new ByteArrayQueue();
-			int status = HttpUtil.get(SERVICE_URL + ip, null, body, null, 30000);
+			int status = httpPool.get(ip, null, body, null);
 			if (status >= 400) {
 				Log.w(body.toString());
 				return null;

@@ -12,7 +12,7 @@ import com.xqbase.util.http.HttpPool;
 
 public class ChinazIp {
 	private static final String SERVICE_URL =
-			"http://ip.chinaz.com/ajaxsync.aspx?at=ip&ip=";
+			"http://ip.chinaz.com/ajaxsync.aspx?at=ipbatch&ip=";
 
 	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
 
