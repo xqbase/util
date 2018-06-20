@@ -1,6 +1,7 @@
 package com.xqbase.util.sns;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +28,7 @@ public class TaobaoIp {
 				Log.w(body.toString());
 				return null;
 			}
-			JSONObject jo = new JSONObject(body.toString());
+			JSONObject jo = new JSONObject(body.toString(StandardCharsets.UTF_8));
 			int code = jo.optInt("code", 1);
 			if (code != 0) {
 				Log.w(body.toString());
