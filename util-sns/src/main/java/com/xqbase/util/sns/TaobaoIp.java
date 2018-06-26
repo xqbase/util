@@ -90,7 +90,7 @@ public class TaobaoIp {
 	private static final String SERVICE_URL =
 			"http://ip.taobao.com/service/getIpInfo.php?ip=";
 	private static final int SO_TIMEOUT = 30000;
-	private static final int KA_TIMEOUT = 30000;
+	private static final int KA_TIMEOUT = 3000;
 
 	private static HttpPool httpPool =
 			new HttpPool(SERVICE_URL, SO_TIMEOUT, KA_TIMEOUT);
