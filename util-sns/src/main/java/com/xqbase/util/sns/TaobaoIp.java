@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.http.HttpPool;
+import com.xqbase.util.http.HttpProxy;
 
 public class TaobaoIp {
 	public static class Exception extends java.lang.Exception {
@@ -88,10 +89,18 @@ public class TaobaoIp {
 
 	private static final String SERVICE_URL =
 			"http://ip.taobao.com/service/getIpInfo.php?ip=";
+	private static final int SO_TIMEOUT = 30000;
+	private static final int KA_TIMEOUT = 30000;
 
-	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 30000, 3000);
+	private static HttpPool httpPool =
+			new HttpPool(SERVICE_URL, SO_TIMEOUT, KA_TIMEOUT);
 
-	public static HttpPool getHttpPool() {
+	public static synchronized void setProxy(HttpProxy proxy) {
+		httpPool.close();
+		httpPool = new HttpPool(proxy, SERVICE_URL, SO_TIMEOUT, KA_TIMEOUT);
+	}
+
+	public static synchronized HttpPool getHttpPool() {
 		return httpPool;
 	}
 
