@@ -41,17 +41,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * A Linux service may receive SIGTERM (kill) and start the JVM's <i>shutdown hook</i>.
  */
 public class Service implements Executor {
-	private CountDownLatch latch = new CountDownLatch(1);
+	private CountDownLatch mainLatch = new CountDownLatch(1);
+	private CountDownLatch hookLatch = new CountDownLatch(1);
 	private ExecutorService executor = Executors.newCachedThreadPool();
 	private AtomicBoolean interrupted = new AtomicBoolean(false);
-	private Queue<Runnable> shutdownHooks = new ConcurrentLinkedQueue<>();
 	private Queue<AutoCloseable> closeables = new ConcurrentLinkedQueue<>();
 	private Thread shutdownHook = new Thread(() -> {
 		interrupted.set(true);
-		Runnable runnable;
-		while ((runnable = shutdownHooks.poll()) != null) {
-			runnable.run();
-		}
+		mainLatch.countDown();
 		AutoCloseable closeable;
 		while ((closeable = closeables.poll()) != null) {
 			try {
@@ -60,7 +57,7 @@ public class Service implements Executor {
 		}
 		Runnables.shutdownNow(executor);
 		try {
-			latch.await();
+			hookLatch.await();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
@@ -107,7 +104,7 @@ public class Service implements Executor {
 	 * This can prevent the main thread being killed before closing resources.
 	 */
 	public void shutdown() {
-		latch.countDown();
+		hookLatch.countDown();
 	}
 
 	/**
@@ -132,12 +129,29 @@ public class Service implements Executor {
 		return interrupted.get();
 	}
 
+	/** 
+	 * Wait until a proper shutdown command is received, then return.
+	 */
+	public void await() {
+		if (interrupted.get()) {
+			return;
+		}
+		try {
+			mainLatch.await();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+	}
+
 	/**
 	 * Add a {@link Runnable} (NOT the JVM's <i>shutdown hook</i>) into the queue
-	 * which will be run when the service is stopping. 
+	 * which will be run when the service is stopping.
+	 *
+	 * @deprecated use {@link #register(AutoCloseable)} instead
 	 */
+	@Deprecated
 	public void addShutdownHook(Runnable runnable) {
-		shutdownHooks.offer(runnable);
+		closeables.offer(runnable::run);
 	}
 
 	/**
