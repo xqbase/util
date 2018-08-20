@@ -39,10 +39,8 @@ public class WhoisIp {
 					InputStreamReader(socket.getInputStream()))) {
 				String line;
 				while ((line = in.readLine()) != null) {
-					System.err.println(line);
 					if (line.toLowerCase().startsWith("netname:")) {
 						infos.add(line.substring(8).trim());
-						break;
 					}
 				}
 			}
@@ -50,20 +48,5 @@ public class WhoisIp {
 			Log.w("Error Parsing " + ip + ": " + e.getMessage());
 		}
 		return infos;
-	}
-
-	public static void main(String[] args) {
-		System.out.println(getNetNames("112.1.161.0"));
-		System.out.println(getNetNames("112.1.161.1"));
-		System.out.println(getNetNames("112.0.143.0"));
-		System.out.println(getNetNames("112.243.54.0"));
-		System.out.println(getNetNames("182.34.47.0"));
-		System.out.println(getNetNames("39.86.64.0"));
-		System.out.println(getNetNames("219.137.62.0"));
-		System.out.println(getNetNames("219.137.63.0"));
-		System.out.println(getNetNames("116.23.92.0"));
-		System.out.println(getNetNames("116.23.93.0"));
-		System.out.println(getNetNames("116.23.94.0"));
-		System.out.println(getNetNames("116.23.95.0"));
 	}
 }

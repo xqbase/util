@@ -32,20 +32,20 @@ public class Ip138Ip {
 				throw new Exception("Error Getting " + ip +
 						": " + status + ", " + response);
 			}
-			String html = response.toString(StandardCharsets.UTF_8);
-			int i = html.indexOf("<p class=\"result\">本站主数据：");
-			if (i < 0) {
-				throw new Exception("Error Getting " + ip + ": " + html);
-			}
-			i += 24;
-			int j = html.indexOf("</p>", i);
-			if (j < 0) {
-				throw new Exception("Error Getting " + ip + ": " + html);
-			}
-			return html.substring(i, j);
 		} catch (IOException e) {
 			throw new Exception("Error Getting " + ip +
 					": " + e.getMessage() + ", " + response);
 		}
+		String html = response.toString(StandardCharsets.UTF_8);
+		int i = html.indexOf("<p class=\"result\">本站主数据：");
+		if (i < 0) {
+			throw new Exception("Error Getting " + ip + ": " + html);
+		}
+		i += 24;
+		int j = html.indexOf("</p>", i);
+		if (j < 0) {
+			throw new Exception("Error Getting " + ip + ": " + html);
+		}
+		return html.substring(i, j);
 	}
 }

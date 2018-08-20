@@ -7,10 +7,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.xqbase.util.ByteArrayQueue;
-import com.xqbase.util.Log;
 import com.xqbase.util.http.HttpPool;
 
 public class ChinazIp {
+	public static class Exception extends java.lang.Exception {
+		private static final long serialVersionUID = 1L;
+
+		public Exception(String message) {
+			super(message);
+		}
+	}
+
 	private static final String SERVICE_URL =
 			"http://ip.chinaz.com/ajaxsync.aspx?at=ipbatch&ip=";
 
@@ -20,24 +27,23 @@ public class ChinazIp {
 		return httpPool;
 	}
 
-	public static String getIpInfo(String ip) {
+	public static String getIpInfo(String ip) throws Exception {
+		ByteArrayQueue response = new ByteArrayQueue();
 		try {
-			ByteArrayQueue body = new ByteArrayQueue();
-			int status = httpPool.get(ip, null, body, null);
-			if (status >= 400) {
-				Log.w(body.toString());
-				return null;
+			int status = httpPool.get(ip, null, response, null);
+			if (status != 200) {
+				throw new Exception("Error Getting " + ip +
+						": " + status + ", " + response);
 			}
-			String callback = body.toString(StandardCharsets.UTF_8);
+			String callback = response.toString(StandardCharsets.UTF_8);
 			if (!callback.startsWith("([") && !callback.endsWith("])")) {
-				Log.w(callback);
-				return null;
+				throw new Exception("Error Getting " + ip + ": " + callback);
 			}
 			return new JSONObject(callback.substring(2, callback.length() - 2)).
 					optString("location");
 		} catch (IOException | JSONException e) {
-			Log.w(e.getMessage());
-			return null;
+			throw new Exception("Error Getting " + ip +
+					": " + e.getMessage() + ", " + response);
 		}
 	}
 }
