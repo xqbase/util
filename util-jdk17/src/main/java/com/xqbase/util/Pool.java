@@ -88,6 +88,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 				}
 			} else {
 				deque.offerFirst(this);
+				inactiveCount.incrementAndGet();
 			}
 		}
 	}
@@ -99,6 +100,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	ConsumerEx<? super T, ?> finalizer;
 	Deque<Entry> deque = new ConcurrentLinkedDeque<>();
 	AtomicInteger activeCount = new AtomicInteger(0);
+	AtomicInteger inactiveCount = new AtomicInteger(0);
 	volatile boolean closed = false;
 
 	/**
@@ -130,10 +132,13 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 					accessed.compareAndSet(accessed_, now)) {
 				Entry entry;
 				while ((entry = deque.pollLast()) != null) {
+					// inactiveCount.decrementAndGet();
 					if (now < entry.borrowed + timeout) {
 						deque.offerLast(entry);
+						// inactiveCount.incrementAndGet();
 						break;
 					}
+					inactiveCount.decrementAndGet();
 					try {
 						finalizer.accept(entry.object);
 					} catch (Exception e) {
@@ -145,6 +150,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 
 		Entry entry = deque.pollFirst();
 		if (entry != null) {
+			inactiveCount.decrementAndGet();
 			entry.borrowed = now;
 			entry.borrows ++;
 			entry.valid = false;
@@ -171,7 +177,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 	 * @return number of inactive (returned) entries in the pool
 	 */
 	public int getInactiveCount() {
-		return deque.size();
+		return inactiveCount.get();
 	}
 
 	/**
@@ -195,7 +201,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		closed = true;
 		Entry entry;
 		while ((entry = deque.pollFirst()) != null) {
-			activeCount.decrementAndGet();
+			inactiveCount.decrementAndGet();
 			try {
 				finalizer.accept(entry.object);
 			} catch (Exception e) {
