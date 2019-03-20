@@ -11,7 +11,7 @@ import com.xqbase.util.SocketPool;
 import com.xqbase.util.function.SupplierEx;
 
 public class HttpPool extends SocketPool {
-	private String path_, host, proxyAuth;
+	private String path_, host, proxyAuth, url;
 
 	private static SupplierEx<Socket, IOException>
 			getSocketSupplier(HttpParam param, int timeout) {
@@ -44,6 +44,7 @@ public class HttpPool extends SocketPool {
 
 	public HttpPool(HttpProxy httpProxy, String url, int soTimeout, int kaTimeout) {
 		this(new HttpParam(httpProxy, url), soTimeout, kaTimeout);
+		this.url = url;
 	}
 
 	private int request(String path, ByteArrayQueue requestBody,
@@ -92,5 +93,9 @@ public class HttpPool extends SocketPool {
 			Pipeline.pipeline(entry.getObject(), host, requests, responses, connectionClose);
 			entry.setValid(!connectionClose[0]);
 		}
+	}
+
+	public String getUrl() {
+		return url;
 	}
 }
