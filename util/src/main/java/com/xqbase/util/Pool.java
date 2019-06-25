@@ -161,8 +161,8 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 			}
 		}
 
-		Entry entry = deque.pollFirst();
-		while (entry != null) {
+		Entry entry;
+		while ((entry = deque.pollFirst()) != null) {
 			inactiveCount.decrementAndGet();
 			if (activator.test(entry.object)) {
 				entry.borrowed = now;
