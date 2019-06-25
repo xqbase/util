@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.xqbase.util.function.ConsumerEx;
+import com.xqbase.util.function.Predicate;
 import com.xqbase.util.function.SupplierEx;
 
 /**
@@ -80,7 +81,7 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		@Override
 		public void close() {
 			activeCount.decrementAndGet();
-			if (closed || !valid) {
+			if (closed || !valid || !deactivator.test(object)) {
 				try {
 					finalizer.accept(object);
 				} catch (Exception e) {
@@ -93,10 +94,20 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		}
 	}
 
+	private static final Predicate<Object> TRUE_PREDICTATE =
+			new Predicate<Object>() {
+		@Override
+		public boolean test(Object t) {
+			return true;
+		}
+	};
+
 	private int timeout;
 	private AtomicLong accessed = new AtomicLong(System.currentTimeMillis());
+	private SupplierEx<? extends T, ? extends E> initializer;
+	private Predicate<? super T> activator = TRUE_PREDICTATE;
 
-	SupplierEx<? extends T, ? extends E> initializer;
+	Predicate<? super T> deactivator = TRUE_PREDICTATE;
 	ConsumerEx<? super T, ?> finalizer;
 	Deque<Entry> deque = new ConcurrentLinkedDeque<>();
 	AtomicInteger activeCount = new AtomicInteger(0);
@@ -115,6 +126,14 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		this.initializer = initializer;
 		this.finalizer = finalizer;
 		this.timeout = timeout;
+	}
+
+	public void setActivator(Predicate<? super T> activator) {
+		this.activator = activator;
+	}
+
+	public void setDeactivator(Predicate<? super T> deactivator) {
+		this.deactivator = deactivator;
 	}
 
 	/**
@@ -149,13 +168,20 @@ public class Pool<T, E extends Exception> implements AutoCloseable {
 		}
 
 		Entry entry = deque.pollFirst();
-		if (entry != null) {
+		while (entry != null) {
 			inactiveCount.decrementAndGet();
-			entry.borrowed = now;
-			entry.borrows ++;
-			entry.valid = false;
-			activeCount.incrementAndGet();
-			return entry;
+			if (activator.test(entry.object)) {
+				entry.borrowed = now;
+				entry.borrows ++;
+				entry.valid = false;
+				activeCount.incrementAndGet();
+				return entry;
+			}
+			try {
+				finalizer.accept(entry.object);
+			} catch (Exception e) {
+				// Ignored
+			}
 		}
 		entry = new Entry();
 		entry.object = initializer.get();

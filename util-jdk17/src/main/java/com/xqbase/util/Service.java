@@ -93,7 +93,10 @@ public class Service implements Executor {
 	 */
 	public boolean startup(String[] args) {
 		if (args != null && args.length > 0 && args[0].equals("stop")) {
-			shutdownHook.run();
+			if (!isInterrupted()) {
+				Runtime.getRuntime().removeShutdownHook(shutdownHook);
+				shutdownHook.run();
+			}
 			return false;
 		}
 		// Do not call addShutdownHook inside Apache Commons Daemon Service Runner
