@@ -2,17 +2,26 @@ package com.xqbase.util.db;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.logging.Logger;
+
+import javax.sql.ConnectionEventListener;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.DataSource;
+import javax.sql.PooledConnection;
+import javax.sql.StatementEventListener;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Pool;
@@ -22,7 +31,8 @@ class OneRowException extends Exception {
 	private static final long serialVersionUID = 1L;
 }
 
-public class ConnectionPool extends Pool<Connection, SQLException> {
+public class ConnectionPool extends Pool<Connection, SQLException>
+		implements DataSource, ConnectionPoolDataSource {
 	private static Object[] valueOf(long... values) {
 		Object[] objs = new Object[values.length];
 		for (int i = 0; i < values.length; i ++) {
@@ -167,5 +177,85 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		for (String sql : sqls) {
 			update(sql);
 		}
+	}
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		return borrow().getObject();
+	}
+
+	@Override
+	public Connection getConnection(String username,
+			String password) throws SQLException {
+		return getConnection();
+	}
+
+	@Override
+	public PrintWriter getLogWriter() {
+		return null;
+	}
+
+	@Override
+	public void setLogWriter(PrintWriter out) {/**/}
+
+	@Override
+	public int getLoginTimeout() {
+		return 0;
+	}
+
+	@Override
+	public void setLoginTimeout(int seconds) {/**/}
+
+	@Override
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		throw new SQLFeatureNotSupportedException();
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		throw new SQLFeatureNotSupportedException();
+	}
+
+	@Override
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		throw new SQLFeatureNotSupportedException();
+	}
+
+	@Override
+	public PooledConnection getPooledConnection() throws SQLException {
+		return new PooledConnection() {
+			@Override
+			public Connection getConnection() throws SQLException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public void close() throws SQLException {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void addConnectionEventListener(
+					ConnectionEventListener listener) {/**/}
+
+			@Override
+			public void removeConnectionEventListener(
+					ConnectionEventListener listener) {/**/}
+
+			@Override
+			public void addStatementEventListener(
+					StatementEventListener listener) {/**/}
+
+			@Override
+			public void removeStatementEventListener(
+					StatementEventListener listener) {/**/}
+		};
+	}
+
+	@Override
+	public PooledConnection getPooledConnection(String user,
+			String password) throws SQLException {
+		return getPooledConnection();
 	}
 }
