@@ -3,6 +3,9 @@ package com.xqbase.util.db;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
@@ -11,6 +14,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.HashMap;
@@ -223,16 +228,40 @@ public class ConnectionPool extends Pool<Connection, SQLException>
 
 	@Override
 	public PooledConnection getPooledConnection() throws SQLException {
+		Entry entry = borrow();
+		entry.setValid(true);
+
 		return new PooledConnection() {
 			@Override
 			public Connection getConnection() throws SQLException {
-				// TODO Auto-generated method stub
-				return null;
+				return (Connection) Proxy.
+						newProxyInstance(ConnectionPool.class.getClassLoader(),
+						new Class[] {Connection.class},
+						(InvocationHandler) (proxy, method, args) -> {
+					if (method.getParameterCount() == 0 &&
+							!method.getName().equals("close")) {
+						entry.close();
+						return null;
+					}
+					try {
+						return method.invoke(proxy, args);
+					} catch (InvocationTargetException e) {
+						Throwable t = e.getTargetException();
+						if (!(t instanceof SQLNonTransientException)) {
+							entry.setValid(false);
+						}
+						if (t instanceof SQLNonTransientConnectionException) {
+							entry.setValid(false);
+						}
+						throw t;
+					}
+				});
 			}
 
 			@Override
 			public void close() throws SQLException {
-				// TODO Auto-generated method stub
+				entry.setValid(false);
+				entry.close();
 			}
 
 			@Override
