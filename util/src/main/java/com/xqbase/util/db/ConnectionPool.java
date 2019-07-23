@@ -22,11 +22,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import javax.sql.ConnectionEventListener;
-import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
-import javax.sql.PooledConnection;
-import javax.sql.StatementEventListener;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Pool;
@@ -37,7 +33,7 @@ class OneRowException extends Exception {
 }
 
 public class ConnectionPool extends Pool<Connection, SQLException>
-		implements DataSource, ConnectionPoolDataSource {
+		implements DataSource {
 	private static Object[] valueOf(long... values) {
 		Object[] objs = new Object[values.length];
 		for (int i = 0; i < values.length; i ++) {
@@ -186,7 +182,32 @@ public class ConnectionPool extends Pool<Connection, SQLException>
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		return borrow().getObject();
+		Entry entry = borrow();
+		Connection connection = entry.getObject();
+		entry.setValid(true);
+
+		return (Connection) Proxy.
+				newProxyInstance(ConnectionPool.class.getClassLoader(),
+				new Class[] {Connection.class},
+				(InvocationHandler) (proxy, method, args) -> {
+			if (method.getParameterCount() == 0 &&
+					method.getName().equals("close")) {
+				entry.close();
+				return null;
+			}
+			try {
+				return method.invoke(connection, args);
+			} catch (InvocationTargetException e) {
+				Throwable t = e.getTargetException();
+				if (!(t instanceof SQLNonTransientException)) {
+					entry.setValid(false);
+				}
+				if (t instanceof SQLNonTransientConnectionException) {
+					entry.setValid(false);
+				}
+				throw t;
+			}
+		});
 	}
 
 	@Override
@@ -224,67 +245,5 @@ public class ConnectionPool extends Pool<Connection, SQLException>
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public PooledConnection getPooledConnection() throws SQLException {
-		Entry entry = borrow();
-		entry.setValid(true);
-
-		return new PooledConnection() {
-			@Override
-			public Connection getConnection() throws SQLException {
-				return (Connection) Proxy.
-						newProxyInstance(ConnectionPool.class.getClassLoader(),
-						new Class[] {Connection.class},
-						(InvocationHandler) (proxy, method, args) -> {
-					if (method.getParameterCount() == 0 &&
-							!method.getName().equals("close")) {
-						entry.close();
-						return null;
-					}
-					try {
-						return method.invoke(proxy, args);
-					} catch (InvocationTargetException e) {
-						Throwable t = e.getTargetException();
-						if (!(t instanceof SQLNonTransientException)) {
-							entry.setValid(false);
-						}
-						if (t instanceof SQLNonTransientConnectionException) {
-							entry.setValid(false);
-						}
-						throw t;
-					}
-				});
-			}
-
-			@Override
-			public void close() throws SQLException {
-				entry.setValid(false);
-				entry.close();
-			}
-
-			@Override
-			public void addConnectionEventListener(
-					ConnectionEventListener listener) {/**/}
-
-			@Override
-			public void removeConnectionEventListener(
-					ConnectionEventListener listener) {/**/}
-
-			@Override
-			public void addStatementEventListener(
-					StatementEventListener listener) {/**/}
-
-			@Override
-			public void removeStatementEventListener(
-					StatementEventListener listener) {/**/}
-		};
-	}
-
-	@Override
-	public PooledConnection getPooledConnection(String user,
-			String password) throws SQLException {
-		return getPooledConnection();
 	}
 }
