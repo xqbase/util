@@ -90,7 +90,7 @@ public class HttpPool extends SocketPool {
 			List<Pipeline.Response> responses) throws IOException {
 		try (Entry entry = borrow()) {
 			boolean[] connectionClose = {false};
-			Pipeline.pipeline(entry.getObject(), host, requests, responses, connectionClose);
+			Pipeline.pipeline(entry.getObject(), path_, host, requests, responses, connectionClose);
 			entry.setValid(!connectionClose[0]);
 		}
 	}

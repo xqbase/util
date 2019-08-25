@@ -87,11 +87,11 @@ public class Pipeline {
 		}
 	}
 
-	static void pipeline(Socket socket, String host, List<Request> requests,
+	static void pipeline(Socket socket, String path, String host, List<Request> requests,
 			List<Response> responses, boolean[] connectionClose) throws IOException {
 		OutputStream out = socket.getOutputStream();
 		for (Request request : requests) {
-			HttpUtil.send(out, request.getPath(), host, null,
+			HttpUtil.send(out, path + request.getPath(), host, null,
 					request.getBody(), request.getHeaders(), request.isHead());
 		}
 		InputStream in = socket.getInputStream();
@@ -119,7 +119,7 @@ public class Pipeline {
 		try (Socket socket = SocketPool.createSocket(param.secure)) {
 			socket.connect(new InetSocketAddress(param.socketHost, param.socketPort), timeout);
 			socket.setSoTimeout(timeout);
-			pipeline(socket, param.host, requests, responses, null);
+			pipeline(socket, param.path, param.host, requests, responses, null);
 		}
 	}
 }
