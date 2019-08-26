@@ -86,8 +86,8 @@ public class HttpPool extends SocketPool {
 		return request(path, requestBody, requestHeaders, false, responseBody, responseHeaders);
 	}
 
-	public void pipeline(List<Pipeline.Request> requests,
-			List<Pipeline.Response> responses) throws IOException {
+	public <T> void pipeline(List<Pipeline.Request<T>> requests,
+			List<Pipeline.Response<T>> responses) throws IOException {
 		try (Entry entry = borrow()) {
 			boolean[] connectionClose = {false};
 			Pipeline.pipeline(entry.getObject(), path_, host, requests, responses, connectionClose);

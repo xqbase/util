@@ -35,10 +35,20 @@ public class HttpProxy {
 				(password == null ? "" : password)).getBytes());
 	}
 
+	public Socket createSocket(String remote,
+			boolean secure, int timeout) throws IOException {
+		return HttpUtil.connect(SocketPool.createSocket(host, port, false, timeout),
+				remote, getProxyAuth(), secure);
+	}
+
 	public Socket createSocket(String remoteHost,
 			int remotePort, boolean secure, int timeout) throws IOException {
 		return HttpUtil.connect(SocketPool.createSocket(host, port, false, timeout),
 				remoteHost, remotePort, getProxyAuth(), secure);
+	}
+
+	public SocketPool createSocketPool(String remote, boolean secure, int timeout) {
+		return new SocketPool(() -> createSocket(remote, secure, timeout), timeout);
 	}
 
 	public SocketPool createSocketPool(String remoteHost,
