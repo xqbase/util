@@ -209,7 +209,7 @@ public class ConnectionPool extends Pool<Connection, SQLException>
 			@Override
 			public Object invoke(Object proxy,
 					Method method, Object[] args) throws Throwable {
-				if (method.getParameterCount() == 0 &&
+				if (method.getParameterTypes().length == 0 &&
 						method.getName().equals("close")) {
 					entry.close();
 					return null;
