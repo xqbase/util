@@ -2,27 +2,17 @@ package com.xqbase.util.db;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.logging.Logger;
-
-import javax.sql.DataSource;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.Pool;
@@ -32,8 +22,7 @@ class OneRowException extends Exception {
 	private static final long serialVersionUID = 1L;
 }
 
-public class ConnectionPool extends Pool<Connection, SQLException>
-		implements DataSource {
+public class ConnectionPool extends Pool<Connection, SQLException> {
 	private static Object[] valueOf(long... values) {
 		Object[] objs = new Object[values.length];
 		for (int i = 0; i < values.length; i ++) {
@@ -178,72 +167,5 @@ public class ConnectionPool extends Pool<Connection, SQLException>
 		for (String sql : sqls) {
 			update(sql);
 		}
-	}
-
-	@Override
-	public Connection getConnection() throws SQLException {
-		Entry entry = borrow();
-		Connection connection = entry.getObject();
-		entry.setValid(true);
-
-		return (Connection) Proxy.
-				newProxyInstance(ConnectionPool.class.getClassLoader(),
-				new Class[] {Connection.class},
-				(InvocationHandler) (proxy, method, args) -> {
-			if (method.getParameterCount() == 0 &&
-					method.getName().equals("close")) {
-				entry.close();
-				return null;
-			}
-			try {
-				return method.invoke(connection, args);
-			} catch (InvocationTargetException e) {
-				Throwable t = e.getTargetException();
-				if (!(t instanceof SQLNonTransientException)) {
-					entry.setValid(false);
-				}
-				if (t instanceof SQLNonTransientConnectionException) {
-					entry.setValid(false);
-				}
-				throw t;
-			}
-		});
-	}
-
-	@Override
-	public Connection getConnection(String username,
-			String password) throws SQLException {
-		return getConnection();
-	}
-
-	@Override
-	public PrintWriter getLogWriter() {
-		return null;
-	}
-
-	@Override
-	public void setLogWriter(PrintWriter out) {/**/}
-
-	@Override
-	public int getLoginTimeout() {
-		return 0;
-	}
-
-	@Override
-	public void setLoginTimeout(int seconds) {/**/}
-
-	@Override
-	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
 	}
 }
