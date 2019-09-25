@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.http.HttpPool;
+import com.xqbase.util.http.HttpProxy;
 
 public class Ip138Ip {
 	public static class Exception extends java.lang.Exception {
@@ -18,10 +19,16 @@ public class Ip138Ip {
 	private static final String SERVICE_URL =
 			"http://m.ip138.com/ip.asp?ip=";
 
-	private static HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
+	private static volatile HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
 
 	public static HttpPool getHttpPool() {
 		return httpPool;
+	}
+
+	public static void setProxy(HttpProxy proxy) {
+		HttpPool originalPool = httpPool;
+		httpPool = new HttpPool(proxy, SERVICE_URL, 15000);
+		originalPool.close();
 	}
 
 	public static String getIpInfo(String ip) throws Exception {
