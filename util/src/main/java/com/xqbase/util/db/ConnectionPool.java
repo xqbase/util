@@ -1,36 +1,35 @@
 package com.xqbase.util.db;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLRecoverableException;
-import java.sql.Statement;
-import java.util.HashMap;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLNonTransientException;
+import java.sql.Wrapper;
 import java.util.Properties;
+import java.util.logging.Logger;
 
-import com.xqbase.util.ByteArrayQueue;
+import javax.sql.DataSource;
+
 import com.xqbase.util.Pool;
 import com.xqbase.util.function.ConsumerEx;
 
-class OneRowException extends Exception {
-	private static final long serialVersionUID = 1L;
+interface Wrapped {/**/}
+
+@FunctionalInterface
+interface NewPredicate {
+	public boolean isNew();
 }
 
-public class ConnectionPool extends Pool<Connection, SQLException> {
-	private static Object[] valueOf(long... values) {
-		Object[] objs = new Object[values.length];
-		for (int i = 0; i < values.length; i ++) {
-			objs[i] = Long.valueOf(values[i]);
-		}
-		return objs;
-	}
-
+public class ConnectionPool extends Pool<Connection, SQLException> 
+		implements DataSource {
 	private static Properties getInfo(String user, String password) {
 		Properties info = new Properties();
 		if (user != null) {
@@ -50,122 +49,146 @@ public class ConnectionPool extends Pool<Connection, SQLException> {
 		super(() -> driver.connect(url, getInfo(user, password)), Connection::close, 60000);
 	}
 
+	@Deprecated
 	public int update(String sql, long... in) throws SQLException {
-		return updateEx(sql, valueOf(in));
+		return DSUtil.update(this, sql, in);
 	}
 
+	@Deprecated
 	public int update(long[] insertId, String sql,
 			long... in) throws SQLException {
-		return updateEx(insertId, sql, valueOf(in));
+		return DSUtil.update(this, insertId, sql, in);
 	}
 
+	@Deprecated
 	public int updateEx(String sql, Object... in) throws SQLException {
-		return updateEx((long[]) null, sql, in);
+		return DSUtil.updateEx(this, sql, in);
 	}
 
+	@Deprecated
 	public int updateEx(long[] insertId, String sql,
 			Object... in) throws SQLException {
-		while (true) {
-			try (Entry entry = borrow()) {
-				try (PreparedStatement ps = entry.getObject().prepareStatement(sql,
-						insertId == null ? Statement.NO_GENERATED_KEYS :
-						Statement.RETURN_GENERATED_KEYS)) {
-					for (int i = 0; i < in.length; i ++) {
-						ps.setObject(i + 1, in[i]);
-					}
-					int numRows;
-					try {
-						numRows = ps.executeUpdate();
-						if (insertId != null) {
-							try (ResultSet rs = ps.getGeneratedKeys()) {
-								int i = 0;
-								while (i < insertId.length && rs.next()) {
-									insertId[i] = rs.getLong(1);
-									i ++;
-								}
-							}
-						}
-					} catch (SQLIntegrityConstraintViolationException e) {
-						// Log.i(e.getMessage());
-						numRows = -1;
-					}
-					entry.setValid(true);
-					return numRows;
-				} catch (SQLRecoverableException e) {
-					if (entry.getBorrows() == 0) {
-						throw e;
-					}
-					continue;
-				}
-			}
-		}
+		return DSUtil.updateEx(this, insertId, sql, in);
 	}
 
+	@Deprecated
 	public Row query(String sql, long... in) throws SQLException {
-		return queryEx(sql, valueOf(in));
+		return DSUtil.query(this, sql, in);
 	}
 
+	@Deprecated
 	public <E extends Exception> void query(ConsumerEx<Row, E> consumer,
 			String sql, long... in) throws E, SQLException {
-		queryEx(consumer, sql, valueOf(in));
+		DSUtil.query(this, consumer, sql, in);
 	}
 
+	@Deprecated
 	public Row queryEx(String sql, Object... in) throws SQLException {
-		Row[] row_ = {null};
-		try {
-			queryEx(row -> {
-				row_[0] = row;
-				throw new OneRowException();
-			}, sql, in);
-		} catch (OneRowException e) {/**/}
-		return row_[0];
+		return DSUtil.queryEx(this, sql, in);
 	}
 
+	@Deprecated
 	public <E extends Exception> void queryEx(ConsumerEx<Row, E> consumer,
 			String sql, Object... in) throws E, SQLException {
-		while (true) {
-			try (Entry entry = borrow()) {
-				try (PreparedStatement ps = entry.getObject().prepareStatement(sql)) {
-					for (int i = 0; i < in.length; i ++) {
-						ps.setObject(i + 1, in[i]);
-					}
-					try (ResultSet rs = ps.executeQuery()) {
-						HashMap<String, Integer> columnMap = new HashMap<>();
-						ResultSetMetaData rsmd = rs.getMetaData();
-						int columnCount = rsmd.getColumnCount();
-						for (int i = 0; i < columnCount; i ++) {
-							columnMap.put(rsmd.getColumnLabel(i + 1).
-									toLowerCase(), Integer.valueOf(i));
-						}
-						while (rs.next()) {
-							consumer.accept(new Row(rs, columnCount, columnMap));
-						}
-					} catch (RuntimeException | SQLException e) {
-						throw e;
-					} catch (Exception e) { // must be E
-						entry.setValid(true);
-						throw e;
-					}
-					entry.setValid(true);
-					return;
-				} catch (SQLRecoverableException e) {
-					if (entry.getBorrows() == 0) {
-						throw e;
-					}
-					continue;
-				}
-			}
-		}
+		DSUtil.queryEx(this, consumer, sql, in);
 	}
 
+	@Deprecated
 	public void source(String sqlFile) throws IOException, SQLException {
-		ByteArrayQueue baq = new ByteArrayQueue();
-		try (FileInputStream inSql = new FileInputStream(sqlFile)) {
-			baq.readFrom(inSql);
+		DSUtil.source(this, sqlFile);
+	}
+
+	private static Object invoke(Entry connEntry, Object delegate,
+			Method method, Object[] args) throws Throwable {
+		if (args != null && args.length == 1 && args[0] instanceof Class) {
+			switch (method.getName()) {
+			case "unwrap":
+				return delegate;
+			case "isWrapperFor":
+				return Boolean.valueOf(((Class<?>) args[0]).
+						isAssignableFrom(delegate.getClass()));
+			default:
+			}
 		}
-		String[] sqls = baq.toString().split(";");
-		for (String sql : sqls) {
-			update(sql);
+		Object value;
+		try {
+			value = method.invoke(delegate, args);
+		} catch (InvocationTargetException e) {
+			Throwable t = e.getTargetException();
+			if (!(t instanceof SQLNonTransientException) ||
+					t instanceof SQLNonTransientConnectionException) {
+				connEntry.setValid(false);
+			}
+			throw t;
 		}
+		if (!(value instanceof Wrapper) || value instanceof Wrapped) {
+			return value;
+		}
+		Class<?>[] fromIfaces = value.getClass().getInterfaces();
+		Class<?>[] toIfaces = new Class[fromIfaces.length + 1];
+		System.arraycopy(fromIfaces, 0, toIfaces, 0, fromIfaces.length);
+		toIfaces[fromIfaces.length] = Wrapped.class;
+		return Proxy.newProxyInstance(ConnectionPool.class.getClassLoader(),
+				toIfaces, (InvocationHandler) (proxy, method_, args_) ->
+				invoke(connEntry, value, method_, args_));
+	}
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		Entry entry = borrow();
+		entry.setValid(true);
+		return (Connection) Proxy.
+				newProxyInstance(ConnectionPool.class.getClassLoader(),
+				new Class[] {Connection.class, NewPredicate.class, Wrapped.class},
+				(InvocationHandler) (proxy, method, args) -> {
+			if (args == null || args.length == 0) {
+				switch (method.getName()) {
+				case "close":
+					entry.close();
+					return null;
+				case "isNew":
+					return Boolean.valueOf(entry.getBorrows() == 0);
+				default:
+				}
+			}
+			return invoke(entry, entry.getObject(), method, args);
+		});
+	}
+
+	@Override
+	public Connection getConnection(String username,
+			String password) throws SQLException {
+		return getConnection();
+	}
+
+	@Override
+	public PrintWriter getLogWriter() {
+		return null;
+	}
+
+	@Override
+	public void setLogWriter(PrintWriter out) {/**/}
+
+	@Override
+	public int getLoginTimeout() {
+		return 0;
+	}
+
+	@Override
+	public void setLoginTimeout(int seconds) {/**/}
+
+	@Override
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		throw new SQLFeatureNotSupportedException();
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		throw new SQLFeatureNotSupportedException();
+	}
+
+	@Override
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		throw new SQLFeatureNotSupportedException();
 	}
 }
