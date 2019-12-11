@@ -39,7 +39,7 @@ public class Lazy<T, E extends Exception> implements AutoCloseable {
 		if (object == null) {
 			synchronized (this) {
 				result = object;
-				if (object == null) {
+				if (result == null) {
 					object = result = initializer.get();
 				}
 			}
