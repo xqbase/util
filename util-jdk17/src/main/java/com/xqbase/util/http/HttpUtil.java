@@ -196,9 +196,8 @@ public class HttpUtil {
 								-1 : contentLength;
 						break;
 					default:
-						if (responseHeaders == null) {
-							break;
-						}
+					}
+					if (responseHeaders != null) {
 						List<String> values = responseHeaders.get(key);
 						if (values == null) {
 							values = new ArrayList<>();

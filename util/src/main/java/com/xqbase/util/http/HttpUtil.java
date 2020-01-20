@@ -195,15 +195,10 @@ public class HttpUtil {
 								-1 : contentLength;
 						break;
 					default:
-						if (responseHeaders == null) {
-							break;
-						}
-						List<String> values = responseHeaders.get(key);
-						if (values == null) {
-							values = new ArrayList<>();
-							responseHeaders.put(key, values);
-						}
-						values.add(value);
+					}
+					if (responseHeaders != null) {
+						responseHeaders.computeIfAbsent(key,
+								k -> new ArrayList<>()).add(value);
 					}
 				}
 			}
