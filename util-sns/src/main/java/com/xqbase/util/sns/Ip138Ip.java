@@ -1,7 +1,6 @@
 package com.xqbase.util.sns;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.http.HttpPool;
@@ -17,7 +16,7 @@ public class Ip138Ip {
 	}
 
 	private static final String SERVICE_URL =
-			"http://m.ip138.com/ip.asp?ip=";
+			"http://www.ip138.com/iplookup.asp?action=2&ip=";
 
 	private static volatile HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
 
@@ -43,13 +42,18 @@ public class Ip138Ip {
 			throw new Exception("Error Getting " + ip +
 					": " + e.getMessage() + ", " + response);
 		}
-		String html = response.toString(StandardCharsets.UTF_8);
-		int i = html.indexOf("<p class=\"result\">本站主数据：");
+		String html;
+		try {
+			html = response.toString("GBK");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		int i = html.indexOf("<li>本站数据：");
 		if (i < 0) {
 			throw new Exception("Error Getting " + ip + ": " + html);
 		}
-		i += 24;
-		int j = html.indexOf("</p>", i);
+		i += 9;
+		int j = html.indexOf("</li>", i);
 		if (j < 0) {
 			throw new Exception("Error Getting " + ip + ": " + html);
 		}
