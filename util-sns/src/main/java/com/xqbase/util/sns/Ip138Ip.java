@@ -48,15 +48,15 @@ public class Ip138Ip {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		int i = html.indexOf("<li>本站数据：");
+		int i = html.indexOf("<font color=\"blue\">ASN归属地：");
 		if (i < 0) {
 			throw new Exception("Error Getting " + ip + ": " + html);
 		}
-		i += 9;
-		int j = html.indexOf("</li>", i);
+		i += 26;
+		int j = html.indexOf("</font>", i);
 		if (j < 0) {
 			throw new Exception("Error Getting " + ip + ": " + html);
 		}
-		return html.substring(i, j);
+		return html.substring(i, j).trim();
 	}
 }
