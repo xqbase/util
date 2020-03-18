@@ -16,7 +16,7 @@ public class Ip138Ip {
 	}
 
 	private static final String SERVICE_URL =
-			"http://www.ip138.com/iplookup.asp?action=2&ip=";
+			"https://www.ip138.com/iplookup.asp?action=2&ip=";
 
 	private static volatile HttpPool httpPool = new HttpPool(SERVICE_URL, 15000);
 
