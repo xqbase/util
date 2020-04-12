@@ -150,7 +150,6 @@ public class ProxyPassServlet extends HttpServlet {
 	private static final int METHOD_HEAD = 1;
 	private static final List<String> METHOD_VALUE = Arrays.asList("GET", "HEAD");
 
-	@SuppressWarnings("resource")
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) {
 		String query = req.getQueryString();
