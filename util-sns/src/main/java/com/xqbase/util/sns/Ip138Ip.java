@@ -2,6 +2,9 @@ package com.xqbase.util.sns;
 
 import java.io.IOException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.xqbase.util.ByteArrayQueue;
 import com.xqbase.util.http.HttpPool;
 import com.xqbase.util.http.HttpProxy;
@@ -10,8 +13,8 @@ public class Ip138Ip {
 	public static class Exception extends java.lang.Exception {
 		private static final long serialVersionUID = 1L;
 
-		public Exception(String message) {
-			super(message);
+		Exception(String ip, String message) {
+			super("Error Getting " + ip + ": " + message);
 		}
 	}
 
@@ -35,12 +38,10 @@ public class Ip138Ip {
 		try {
 			int status = httpPool.get(ip, null, response, null);
 			if (status != 200) {
-				throw new Exception("Error Getting " + ip +
-						": " + status + ", " + response);
+				throw new Exception(ip, status + ", " + response);
 			}
 		} catch (IOException e) {
-			throw new Exception("Error Getting " + ip +
-					": " + e.getMessage() + ", " + response);
+			throw new Exception(ip, e.getMessage() + ", " + response);
 		}
 		String html;
 		try {
@@ -48,15 +49,20 @@ public class Ip138Ip {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		int i = html.indexOf("<font color=\"blue\">ASN归属地：");
+		int i = html.indexOf("var ip_result = {");
 		if (i < 0) {
-			throw new Exception("Error Getting " + ip + ": " + html);
+			throw new Exception(ip, html);
 		}
-		i += 26;
-		int j = html.indexOf("</font>", i);
+		i += 17;
+		int j = html.indexOf("};", i);
 		if (j < 0) {
-			throw new Exception("Error Getting " + ip + ": " + html);
+			throw new Exception(ip, html);
 		}
-		return html.substring(i, j).trim();
+		String json = "{" + html.substring(i, j) + "}";
+		try {
+			return new JSONObject(json).optString("ASN归属地").trim();
+		} catch (JSONException e) {
+			throw new Exception(ip, json);
+		}
 	}
 }
