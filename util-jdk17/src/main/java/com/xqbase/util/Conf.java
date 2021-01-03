@@ -230,7 +230,7 @@ public class Conf {
 		if (list == null) {
 			return;
 		}
-		for (String file : folder.list()) {
+		for (String file : list) {
 			if (new File(root + path + "/" + file).isDirectory()) {
 				search(classes, root, path + "/" + file);
 			} else if (file.endsWith(".class")) {
