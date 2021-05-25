@@ -34,8 +34,7 @@ public class HttpsFilter extends HttpFilter {
 			path = path.substring(prefix.length());
 		}
 		String query = req.getQueryString();
-		String suffix = (path == null ? "" : path) +
-				(Strings.isEmpty(query) ? "" : "?" + query);
+		String suffix = path + (Strings.isEmpty(query) ? "" : "?" + query);
 		resp.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
 		resp.setHeader("Location",
 				"https://" + req.getServerName() + prefix + suffix);

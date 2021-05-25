@@ -44,8 +44,7 @@ public class HostFilter implements HttpFilter {
 			path = path.substring(prefix.length());
 		}
 		String query = req.getQueryString();
-		String suffix = (path == null ? "" : path) +
-				(Strings.isEmpty(query) ? "" : "?" + query);
+		String suffix = path + (Strings.isEmpty(query) ? "" : "?" + query);
 		String host = req.getServerName();
 		// Full match first, then wildcard, finally default ("_") 
 		prefix = map.get(host);
